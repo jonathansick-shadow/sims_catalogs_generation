@@ -17,11 +17,11 @@ print ic.metadata.parameters
 curMD = copy.deepcopy(ic.metadata)
 curMD.writeMetadata('testMetadata.dat', 'TRIM', myqdb.opsim, newfile=True)
 cPickle.dump(ic, open('test.pkl', 'w'))
-#ic.makeHelio()
+# ic.makeHelio()
 ic.makeTrimCoords()
 ic.metadata.validateMetadata('TRIM', myqdb.opsim)
 print ic.dataArray
 ic.validateData('TRIM')
 ic.writeCatalogData('iCTest.txt', 'TRIM')
-ic.metadata.writeMetadata('iCTest.meta','TRIM', myqdb.opsim, newfile = True)
+ic.metadata.writeMetadata('iCTest.meta', 'TRIM', myqdb.opsim, newfile = True)
 

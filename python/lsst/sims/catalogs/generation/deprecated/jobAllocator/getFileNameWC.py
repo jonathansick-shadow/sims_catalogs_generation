@@ -1,6 +1,8 @@
 # execfile('getFileNameWC.py')
 
-import fnmatch, os
+import fnmatch
+import os
+
 
 def do(dir0, str0):
     matches = []

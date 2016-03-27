@@ -1,9 +1,15 @@
-import os, sys, time, cPickle, time, copy
+import os
+import sys
+import time
+import cPickle
+import time
+import copy
 from jobAllocatorStubs import *
 import getFileNameWC
 from lsst.sims.catalogs.generation.db import queryDB
 from lsst.sims.catalogs.generation.db import jobDB
 import lsst.sims.catalogs.measures.utils as mUtils
+
 
 class JobAllocator:
 
@@ -18,10 +24,10 @@ class JobAllocator:
     executionDBManager = None
 
     # I don't remember what these are for...
-    chunkOutputs = None #???
-    fileName = None #???
-    directory = None #???
-    
+    chunkOutputs = None  # ???
+    fileName = None  # ???
+    directory = None  # ???
+
     def __init__(self, workDir='/local/tmp/jobAllocator/', chunkSize=1000, maxCats=-1, queryOnly=False):
         print 'In JA __init__()'
         print 'Creating JA with chunkSize: %i, maxCats: %i' % (chunkSize, maxCats)
@@ -41,7 +47,7 @@ class JobAllocator:
             raise RuntimeError, '*** You are not allowed to swamp the network.'
         self.QueryOnly = queryOnly
         print 'Leaving JA __init()__'
-        
+
     def reset(self):
         print 'In JA reset()'
         self.nJobs = None
@@ -53,7 +59,7 @@ class JobAllocator:
             self.catalogTypeManager.reset()
         if self.uIToDBManager:
             self.uIToDBManager.reset()
-        #if self.executionDBManager:
+        # if self.executionDBManager:
         #    self.executionDBManager.reset()
         self.WorkDir = None
         self.nextFileNum = 0
@@ -69,7 +75,7 @@ class JobAllocator:
         on the metaData classes."""
         for m in metaDataFileList:
             self.metaDataManager.mergeFromFile(m)
-    
+
     def addMetaData(self, metaData):
         self.metaDataManager.merge(metaData)
 
@@ -102,12 +108,17 @@ class JobAllocator:
         print 'Using job ID: %s' % nFN
         print 'queryTypes:', queryTypes
         jobNum = 0
-        jobTypes = []; jobNums = []; jobPickleFiles = []; useTypes = []
-        allOutputFiles = []; curMD = None
+        jobTypes = []
+        jobNums = []
+        jobPickleFiles = []
+        useTypes = []
+        allOutputFiles = []
+        curMD = None
         self.metaDataManager.reset()
         os.system('free -m')
         for objectType in queryTypes:
-            if objectType not in useTypes: useTypes.append(objectType)
+            if objectType not in useTypes:
+                useTypes.append(objectType)
             print 'Getting first %s instance catalog of size %i...' % (
                 objectType, self.chunkSize)
             t0 = time.time()
@@ -136,7 +147,7 @@ class JobAllocator:
                 # Store job data files in instance
                 time0 = time.time()
                 instanceCat.jobAllocatorDataFile = t0
-                allOutputFiles.append(t0) # Order is important
+                allOutputFiles.append(t0)  # Order is important
                 instanceCat.jobAllocatorCatalogType = catalogType
                 instanceCat.jobAllocatorObjectType = objectType
                 cPickle.dump(instanceCat, open(t1, 'w'))
@@ -149,7 +160,8 @@ class JobAllocator:
                     curMD.mergeMetadata(instanceCat.metadata)
 
                 # *** RRG:  Free up memory somehow here for instanceCat...
-                del(instanceCat); instanceCat = None
+                del(instanceCat)
+                instanceCat = None
                 os.system('free -m')
                 if self.maxCats >= 0 and (numCats + 1) >= self.maxCats:
                     instanceCat = None
@@ -171,7 +183,7 @@ class JobAllocator:
 
         # Finished with queryDB; clean up nicely.
         myQDB.closeSession()
-        
+
         # For debug mode, don't start the clients
         if self.QueryOnly == True:
             print 'Full time for this file: %i sec' % (time.time()-fullTimeStart)
@@ -187,7 +199,8 @@ class JobAllocator:
             #t0 = 'ssh minerva0 "(cd $PBS_O_WORKDIR; qsub ./runOneAthena.csh %i %s %s)"' % (nFN, jobId, jobPickleFiles[i])
             cwd0 = os.getcwd()
             f0 = open('tmpJA%s.csh' % jobId, 'w')
-	    f0.write('#!/bin/csh\n#PBS -N jA%s\n#PBS -l walltime=1:00:00\n#PBS -e jA%s.err\n#PBS -o jA%s.out\ncd %s\nsource setupAthena.csh\npython jobAllocatorRun.py %s %s %s\necho Finished.' % (jobId, jobId, jobId, cwd0, nFN, jobId, jobPickleFiles[i]))
+            f0.write('#!/bin/csh\n#PBS -N jA%s\n#PBS -l walltime=1:00:00\n#PBS -e jA%s.err\n#PBS -o jA%s.out\ncd %s\nsource setupAthena.csh\npython jobAllocatorRun.py %s %s %s\necho Finished.' %
+                     (jobId, jobId, jobId, cwd0, nFN, jobId, jobPickleFiles[i]))
             f0.close()
             t0 = 'ssh minerva0 "(cd %s; /opt/torque/bin/qsub tmpJA%s.csh)"' % (cwd0, jobId)
             print t0
@@ -221,19 +234,17 @@ class JobAllocator:
         print 'Full time for this file: %i sec' % (time.time()-fullTimeStart)
         print 'Finished catting trim file: ', trimFile
 
-        
-
     # Private
     def _setnJobs(self, nJobs):
         """Verify value and then assign it."""
         verifynJobs(nJobs)
         self.nJobs = nJobs
-        
+
     def _setcatalogTypes(self, catalogTypes):
         """Verify value and then assign it."""
         verifycatalogTypes(catalogTypes)
         self.catalogTypes = catalogTypes
-        
+
     def _setchunkSize(self, chunkSize):
         """Verify value and then assign it."""
         verifychunkSize(chunkSize)
@@ -248,34 +259,30 @@ class JobAllocator:
     def _verifychunkSize(chunkSize):
         """If value is not appropriate, raise a ValueError exception."""
 
-        
 
-
-
-
-#Controller -> JobAllocator: clear()
-#Controller -> JobAllocator: addMetaDataList(metaDataFileList)
-#JobAllocator -> MetaDataManager: load(metaDataFile0)
-#MetaDataManager -> JobAllocator: data
-#JobAllocator -> MetaDataManager: load(metaDataFileN)
-#MetaDataManager -> JobAllocator: data
-#JobAllocator -> MetaDataManager: mergeMetaDataList(metaDataList)
-#MetaDataManager -> JobAllocator: Done
-#JobAllocator -> MetaDataManager: verifyMetaData(metaDataList)
-#JobAllocator -> Controller: Done
-#Controller -> JobAllocator: makeCatalogs(catalogTypes, uIInfo, chunkSize=None, nJobs=None)
-#JobAllocator -> CatalogTypeManager: verifyMetaData(catalogTypes, metaData)
-#CatalogTypeManager -> JobAllocator: Done
-#JobAllocator -> JobAllocator: writeMetaDataFile(outFile)
-#JobAllocator -> UIToDBManager: constructDBQuery(uIInfo)
-#UIToDBManager -> JobAllocator: dBQuery
-#JobAllocator -> DBQuery: initialize(dBQuery, chunkSize)
-#JobAllocator -> DBQuery: queryNextChunk()
-#DBQuery -> JobAllocator: dBChunk
-#JobAllocator -> InstanceCatalog: instantiate(catalogTypes, metaDataFile, dBChunk)
-#InstanceCatalog -> CatalogTypeManager: verifyMetaData(catalogTypes, metaData)
-#CatalogTypeManager -> InstanceCatalog: Done
-#InstanceCatalog -> JobAllocator: jobParameters
-#JobAllocator -> ExecutionDB: newJob(jobParameters)
-#ExecutionDB -> JobAllocator: Done
-#JobAllocator -> Controller: Done(executionDBTable)
+# Controller -> JobAllocator: clear()
+# Controller -> JobAllocator: addMetaDataList(metaDataFileList)
+# JobAllocator -> MetaDataManager: load(metaDataFile0)
+# MetaDataManager -> JobAllocator: data
+# JobAllocator -> MetaDataManager: load(metaDataFileN)
+# MetaDataManager -> JobAllocator: data
+# JobAllocator -> MetaDataManager: mergeMetaDataList(metaDataList)
+# MetaDataManager -> JobAllocator: Done
+# JobAllocator -> MetaDataManager: verifyMetaData(metaDataList)
+# JobAllocator -> Controller: Done
+# Controller -> JobAllocator: makeCatalogs(catalogTypes, uIInfo, chunkSize=None, nJobs=None)
+# JobAllocator -> CatalogTypeManager: verifyMetaData(catalogTypes, metaData)
+# CatalogTypeManager -> JobAllocator: Done
+# JobAllocator -> JobAllocator: writeMetaDataFile(outFile)
+# JobAllocator -> UIToDBManager: constructDBQuery(uIInfo)
+# UIToDBManager -> JobAllocator: dBQuery
+# JobAllocator -> DBQuery: initialize(dBQuery, chunkSize)
+# JobAllocator -> DBQuery: queryNextChunk()
+# DBQuery -> JobAllocator: dBChunk
+# JobAllocator -> InstanceCatalog: instantiate(catalogTypes, metaDataFile, dBChunk)
+# InstanceCatalog -> CatalogTypeManager: verifyMetaData(catalogTypes, metaData)
+# CatalogTypeManager -> InstanceCatalog: Done
+# InstanceCatalog -> JobAllocator: jobParameters
+# JobAllocator -> ExecutionDB: newJob(jobParameters)
+# ExecutionDB -> JobAllocator: Done
+# JobAllocator -> Controller: Done(executionDBTable)

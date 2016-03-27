@@ -14,12 +14,13 @@ from sqlalchemy import (create_engine, MetaData,
 from sqlalchemy import exc as sa_exc
 from lsst.daf.persistence import DbAuth
 
-#The documentation at http://docs.sqlalchemy.org/en/rel_0_7/core/types.html#sqlalchemy.types.Numeric
-#suggests using the cdecimal module.  Since it is not standard, import decimal.
-#TODO: test for cdecimal and use it if it exists.
+# The documentation at http://docs.sqlalchemy.org/en/rel_0_7/core/types.html#sqlalchemy.types.Numeric
+# suggests using the cdecimal module.  Since it is not standard, import decimal.
+# TODO: test for cdecimal and use it if it exists.
 import decimal
 
 __all__ = ["ChunkIterator", "DBObject", "CatalogDBObject", "fileDBObject"]
+
 
 def valueOfPi():
     """
@@ -28,7 +29,8 @@ def valueOfPi():
     """
     return numpy.pi
 
-def declareTrigFunctions(conn,connection_rec,connection_proxy):
+
+def declareTrigFunctions(conn, connection_rec, connection_proxy):
     """
     A database event listener
     which will define the math functions necessary for evaluating the
@@ -38,27 +40,29 @@ def declareTrigFunctions(conn,connection_rec,connection_proxy):
     see:    http://docs.sqlalchemy.org/en/latest/core/events.html
     """
 
-    conn.create_function("COS",1,numpy.cos)
-    conn.create_function("SIN",1,numpy.sin)
-    conn.create_function("ASIN",1,numpy.arcsin)
-    conn.create_function("SQRT",1,numpy.sqrt)
-    conn.create_function("POWER",2,numpy.power)
-    conn.create_function("PI",0,valueOfPi)
+    conn.create_function("COS", 1, numpy.cos)
+    conn.create_function("SIN", 1, numpy.sin)
+    conn.create_function("ASIN", 1, numpy.arcsin)
+    conn.create_function("SQRT", 1, numpy.sqrt)
+    conn.create_function("POWER", 2, numpy.power)
+    conn.create_function("PI", 0, valueOfPi)
 
 #------------------------------------------------------------
 # Iterator for database chunks
 
+
 class ChunkIterator(object):
     """Iterator for query chunks"""
+
     def __init__(self, dbobj, query, chunk_size, arbitrarySQL = False):
         self.dbobj = dbobj
         self.exec_query = dbobj.connection.session.execute(query)
         self.chunk_size = chunk_size
 
-        #arbitrarySQL exists in case a CatalogDBObject calls
-        #get_arbitrary_chunk_iterator; in that case, we need to
-        #be able to tell this object to call _postprocess_arbitrary_results,
-        #rather than _postprocess_results
+        # arbitrarySQL exists in case a CatalogDBObject calls
+        # get_arbitrary_chunk_iterator; in that case, we need to
+        # be able to tell this object to call _postprocess_arbitrary_results,
+        # rather than _postprocess_results
         self.arbitrarySQL = arbitrarySQL
 
     def __iter__(self):
@@ -75,7 +79,7 @@ class ChunkIterator(object):
             raise StopIteration
 
     def _postprocess_results(self, chunk):
-        if len(chunk)==0:
+        if len(chunk) == 0:
             raise StopIteration
         if self.arbitrarySQL:
             return self.dbobj._postprocess_arbitrary_results(chunk)
@@ -112,10 +116,9 @@ class DBConnection(object):
         self._validate_conn_params()
         self._connect_to_engine()
 
-
     def _connect_to_engine(self):
 
-        #DbAuth will not look up hosts that are None, '' or 0
+        # DbAuth will not look up hosts that are None, '' or 0
         if self._host:
             try:
                 authDict = {'username': DbAuth.username(self._host, str(self._port)),
@@ -136,7 +139,6 @@ class DBConnection(object):
             dbUrl = url.URL(self._driver,
                             database=self._database)
 
-
         self._engine = create_engine(dbUrl, echo=self._verbose)
 
         if self._engine.dialect.name == 'sqlite':
@@ -145,7 +147,6 @@ class DBConnection(object):
         self._session = scoped_session(sessionmaker(autoflush=True,
                                                     bind=self._engine))
         self._metadata = MetaData(bind=self._engine)
-
 
     def _validate_conn_params(self):
         """Validate connection parameters
@@ -186,10 +187,9 @@ class DBConnection(object):
             raise AttributeError("%s.database is None. "%(self.__class__.__name__) + errMessage)
 
         if 'sqlite' in self._driver:
-            #When passed sqlite database, override default host/port
+            # When passed sqlite database, override default host/port
             self._host = None
             self._port = None
-
 
     def __eq__(self, other):
         return (self._database is other._database) and \
@@ -198,7 +198,6 @@ class DBConnection(object):
                (self._port is other._port) and \
                (self._verbose is other._verbose)
 
-
     @property
     def engine(self):
         return self._engine
@@ -206,7 +205,6 @@ class DBConnection(object):
     @property
     def session(self):
         return self._session
-
 
     @property
     def metadata(self):
@@ -256,15 +254,15 @@ class DBObject(object):
         """
 
         self.dtype = None
-        #this is a cache for the query, so that any one query does not have to guess dtype multiple times
+        # this is a cache for the query, so that any one query does not have to guess dtype multiple times
 
         if connection is None:
-            #Explicit constructor to DBObject preferred
+            # Explicit constructor to DBObject preferred
             kwargDict = dict(database=database,
-                         driver=driver,
-                         host=host,
-                         port=port,
-                         verbose=verbose)
+                             driver=driver,
+                             host=host,
+                             port=port,
+                             verbose=verbose)
 
             for key, value in kwargDict.iteritems():
                 if value is not None or not hasattr(self, key):
@@ -279,8 +277,6 @@ class DBObject(object):
             self.host = connection.host
             self.port = connection.port
             self.verbose = connection.verbose
-
-
 
     def get_table_names(self):
         """Return a list of the names of the tables in the database"""
@@ -301,7 +297,8 @@ class DBObject(object):
         else:
             columnDict = {}
             for name in tableNameList:
-                columnList = [str(xx['name']) for xx in reflection.Inspector.from_engine(self.connection.engine).get_columns(name)]
+                columnList = [str(xx['name']) for xx in reflection.Inspector.from_engine(
+                    self.connection.engine).get_columns(name)]
                 columnDict[name] = columnList
             return columnDict
 
@@ -336,7 +333,7 @@ class DBObject(object):
             dataString = ''
             for xx in results[0]:
                 if dataString is not '':
-                    dataString+=','
+                    dataString += ','
                 dataString += str(xx)
             names = [str(ww) for ww in results[0].keys()]
             dataArr = numpy.genfromtxt(StringIO(dataString), dtype=None, names=names, delimiter=',')
@@ -345,7 +342,7 @@ class DBObject(object):
         if len(results) == 0:
             return numpy.recarray((0,), dtype = self.dtype)
 
-        retresults = numpy.rec.fromrecords([tuple(xx) for xx in results],dtype = self.dtype)
+        retresults = numpy.rec.fromrecords([tuple(xx) for xx in results], dtype = self.dtype)
         return self._final_pass(retresults)
 
     def execute_arbitrary(self, query, dtype = None):
@@ -356,12 +353,12 @@ class DBObject(object):
         the code will guess the datatype and assign generic names to the columns
         """
 
-        if not isinstance(query,str):
+        if not isinstance(query, str):
             raise RuntimeError("DBObject execute must be called with a string query")
 
-        unacceptableCommands = ["delete","drop","insert","update"]
+        unacceptableCommands = ["delete", "drop", "insert", "update"]
         for badCommand in unacceptableCommands:
-            if query.lower().find(badCommand.lower())>=0:
+            if query.lower().find(badCommand.lower()) >= 0:
                 raise RuntimeError("query made to DBObject execute contained %s " % badCommand)
 
         self.dtype = dtype
@@ -389,6 +386,7 @@ class DBObject(object):
         """
         self.dtype = dtype
         return ChunkIterator(self, query, chunk_size, arbitrarySQL = True)
+
 
 class CatalogDBObjectMeta(type):
     """Meta class for registering new objects.
@@ -418,8 +416,8 @@ class CatalogDBObjectMeta(type):
             if cls.objid in cls.registry:
                 srcfile = inspect.getsourcefile(cls.registry[cls.objid])
                 srcline = inspect.getsourcelines(cls.registry[cls.objid])[1]
-                warnings.warn('duplicate object identifier %s specified. '%(cls.objid)+\
-                              'This will override previous definition on line %i of %s'%
+                warnings.warn('duplicate object identifier %s specified. '%(cls.objid) +
+                              'This will override previous definition on line %i of %s' %
                               (srcline, srcfile))
             cls.registry[cls.objid] = cls
 
@@ -431,10 +429,10 @@ class CatalogDBObjectMeta(type):
             if cls.skipRegistration:
                 pass
             elif cls.objectTypeId is None:
-                pass #Don't add typeIds that are None
+                pass  # Don't add typeIds that are None
             elif cls.objectTypeId in cls.objectTypeIdList:
-                warnings.warn('Duplicate object type id %s specified: '%cls.objectTypeId+\
-                              '\nOutput object ids may not be unique.\nThis may not be a problem if you do not '+\
+                warnings.warn('Duplicate object type id %s specified: '%cls.objectTypeId +
+                              '\nOutput object ids may not be unique.\nThis may not be a problem if you do not ' +
                               'want globally unique id values')
             else:
                 cls.objectTypeIdList.append(cls.objectTypeId)
@@ -442,7 +440,7 @@ class CatalogDBObjectMeta(type):
 
     def __str__(cls):
         dbObjects = cls.registry.keys()
-        outstr = "++++++++++++++++++++++++++++++++++++++++++++++\n"+\
+        outstr = "++++++++++++++++++++++++++++++++++++++++++++++\n" +\
                  "Registered object types are:\n"
         for dbObject in dbObjects:
             outstr += "%s\n"%(dbObject)
@@ -451,6 +449,7 @@ class CatalogDBObjectMeta(type):
         outstr += "$> CatalogDBObject.from_objid([name]).show_mapped_columns()\n"
         outstr += "+++++++++++++++++++++++++++++++++++++++++++++"
         return outstr
+
 
 class CatalogDBObject(DBObject):
     """Database Object base class
@@ -470,7 +469,7 @@ class CatalogDBObject(DBObject):
     raColName = None
     decColName = None
 
-    #Provide information if this object should be tested in the unit test
+    # Provide information if this object should be tested in the unit test
     doRunTest = False
     testObservationMetaData = None
 
@@ -479,12 +478,12 @@ class CatalogDBObject(DBObject):
     #: list.
     #: numpy doesn't know how to convert decimal.Decimal types, so I changed this to float
     #: TODO this doesn't seem to make a difference but make sure.
-    dbTypeMap = {'BIGINT':(int,), 'BOOLEAN':(bool,), 'FLOAT':(float,), 'INTEGER':(int,),
-                 'NUMERIC':(float,), 'SMALLINT':(int,), 'TINYINT':(int,), 'VARCHAR':(str, 256),
-                 'TEXT':(str, 256), 'CLOB':(str, 256), 'NVARCHAR':(str, 256),
-                 'NCLOB':(unicode, 256), 'NTEXT':(unicode, 256), 'CHAR':(str, 1), 'INT':(int,),
-                 'REAL':(float,), 'DOUBLE':(float,), 'STRING':(str, 256), 'DOUBLE_PRECISION':(float,),
-                 'DECIMAL':(float,)}
+    dbTypeMap = {'BIGINT': (int,), 'BOOLEAN': (bool,), 'FLOAT': (float,), 'INTEGER': (int,),
+                 'NUMERIC': (float,), 'SMALLINT': (int,), 'TINYINT': (int,), 'VARCHAR': (str, 256),
+                 'TEXT': (str, 256), 'CLOB': (str, 256), 'NVARCHAR': (str, 256),
+                 'NCLOB': (unicode, 256), 'NTEXT': (unicode, 256), 'CHAR': (str, 1), 'INT': (int,),
+                 'REAL': (float,), 'DOUBLE': (float,), 'STRING': (str, 256), 'DOUBLE_PRECISION': (float,),
+                 'DECIMAL': (float,)}
 
     @classmethod
     def from_objid(cls, objid, *args, **kwargs):
@@ -548,10 +547,11 @@ class CatalogDBObject(DBObject):
                 message += " https://confluence.lsstcorp.org/display/SIM/Accessing+the+UW+CATSIM+Database "
             else:
                 message = ''
-            raise RuntimeError("Failed to connect to %s: sqlalchemy.%s %s" % (self.connection.engine, e.message, message))
+            raise RuntimeError("Failed to connect to %s: sqlalchemy.%s %s" %
+                               (self.connection.engine, e.message, message))
 
-        #Need to do this after the table is instantiated so that
-        #the default columns can be filled from the table object.
+        # Need to do this after the table is instantiated so that
+        # the default columns can be filled from the table object.
         if self.generateDefaultColumnMap:
             self._make_default_columns()
         # build column mapping and type mapping dicts from columns
@@ -566,14 +566,14 @@ class CatalogDBObject(DBObject):
         for col in self.table.c.keys():
             print "%s -- %s"%(col, self.table.c[col].type.__visit_name__)
 
-
     def getCatalog(self, ftype, *args, **kwargs):
         try:
             from lsst.sims.catalogs.measures.instance import\
-                    InstanceCatalog
+                InstanceCatalog
             return InstanceCatalog.new_catalog(ftype, self, *args, **kwargs)
         except ImportError:
-            raise ImportError("sims_catalogs_measures not set up.  Cannot get InstanceCatalog from the object.")
+            raise ImportError(
+                "sims_catalogs_measures not set up.  Cannot get InstanceCatalog from the object.")
 
     def getIdColKey(self):
         return self.idColKey
@@ -587,10 +587,11 @@ class CatalogDBObject(DBObject):
 
     def _make_column_map(self):
         self.columnMap = OrderedDict([(el[0], el[1] if el[1] else el[0])
-                                     for el in self.columns])
+                                      for el in self.columns])
+
     def _make_type_map(self):
-        self.typeMap = OrderedDict([(el[0], el[2:] if len(el)> 2 else (float,))
-                                   for el in self.columns])
+        self.typeMap = OrderedDict([(el[0], el[2:] if len(el) > 2 else (float,))
+                                    for el in self.columns])
 
     def _make_default_columns(self):
         if self.columns:
@@ -602,15 +603,15 @@ class CatalogDBObject(DBObject):
             dbtypestr = self.table.c[col].type.__visit_name__
             dbtypestr = dbtypestr.upper()
             if col in colnames:
-                if self.verbose: #Warn for possible column redefinition
-                    warnings.warn("Database column, %s, overridden in self.columns... "%(col)+
+                if self.verbose:  # Warn for possible column redefinition
+                    warnings.warn("Database column, %s, overridden in self.columns... "%(col) +
                                   "Skipping default assignment.")
             elif dbtypestr in self.dbTypeMap:
                 self.columns.append((col, col)+self.dbTypeMap[dbtypestr])
             else:
                 if self.verbose:
-                    warnings.warn("Can't create default column for %s.  There is no mapping "%(col)+
-                                  "for type %s.  Modify the dbTypeMap, or make a custom columns "%(dbtypestr)+
+                    warnings.warn("Can't create default column for %s.  There is no mapping "%(col) +
+                                  "for type %s.  Modify the dbTypeMap, or make a custom columns "%(dbtypestr) +
                                   "list.")
 
     def _get_column_query(self, colnames=None):
@@ -639,12 +640,12 @@ class CatalogDBObject(DBObject):
         for col, val in zip(colnames, vals):
             if val is idColName:
                 continue
-            #Check if the column is a default column (col == val)
+            # Check if the column is a default column (col == val)
             if col == val:
-                #If column is in the table, use it.
+                # If column is in the table, use it.
                 query = query.add_column(self.table.c[col].label(col))
             else:
-                #If not assume the user specified the column correctly
+                # If not assume the user specified the column correctly
                 query = query.add_column(expression.literal_column(val).label(col))
 
         return query
@@ -652,7 +653,7 @@ class CatalogDBObject(DBObject):
     def filter(self, query, bounds):
         """Filter the query by the associated metadata"""
         if bounds is not None:
-            on_clause = bounds.to_SQL(self.raColName,self.decColName)
+            on_clause = bounds.to_SQL(self.raColName, self.decColName)
             query = query.filter(on_clause)
         return query
 
@@ -677,15 +678,15 @@ class CatalogDBObject(DBObject):
 
         dtype = numpy.dtype([(k,)+self.typeMap[k] for k in cols])
 
-        if len(set(cols)&set(self.dbDefaultValues)) > 0:
+        if len(set(cols) & set(self.dbDefaultValues)) > 0:
 
             results_array = []
 
             for result in results:
                 results_array.append([
-                                      result[colName] if result[colName] or colName not in self.dbDefaultValues
-                                      else self.dbDefaultValues[colName] for colName in cols
-                                     ])
+                    result[colName] if result[colName] or colName not in self.dbDefaultValues
+                    else self.dbDefaultValues[colName] for colName in cols
+                ])
 
         else:
             results_array = results
@@ -735,12 +736,14 @@ class CatalogDBObject(DBObject):
 
         return ChunkIterator(self, query, chunk_size)
 
+
 class fileDBObject(CatalogDBObject):
     ''' Class to read a file into a database and then query it'''
-    #Column names to index.  Specify compound indexes using tuples of column names
+    # Column names to index.  Specify compound indexes using tuples of column names
     indexCols = []
+
     def __init__(self, dataLocatorString, runtable=None, driver="sqlite", host=None, port=None, database=":memory:",
-                dtype=None, numGuess=1000, delimiter=None, verbose=False, idColKey=None, **kwargs):
+                 dtype=None, numGuess=1000, delimiter=None, verbose=False, idColKey=None, **kwargs):
         """
         Initialize an object for querying databases loaded from a file
 

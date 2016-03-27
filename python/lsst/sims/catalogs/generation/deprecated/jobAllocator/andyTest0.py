@@ -21,5 +21,5 @@ ic.metadata.validateMetadata('TRIM', myqdb.opsim)
 print ic.dataArray
 ic.validateData('TRIM')
 ic.writeCatalogData('iCTest.txt', 'TRIM')
-ic.metadata.writeMetadata('iCTest.meta','TRIM', myqdb.opsim, newfile = True)
+ic.metadata.writeMetadata('iCTest.meta', 'TRIM', myqdb.opsim, newfile = True)
 

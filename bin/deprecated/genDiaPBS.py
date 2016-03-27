@@ -1,4 +1,6 @@
 import sys
+
+
 def writeFile(fh, list, radius):
     header = """### ---------------------------------------
 ### PBS script created by: krughoff

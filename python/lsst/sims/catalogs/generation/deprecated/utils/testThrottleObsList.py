@@ -1,6 +1,8 @@
 # execfile('testThrottleObsList.py')
 
-import os, sys, time
+import os
+import sys
+import time
 from lsst.sims.catalogs.generation.db import jobDB
 import throttleUtils
 
@@ -13,12 +15,13 @@ if len(sys.argv) > 3:
     if sys.argv[-1].lower() == 'testmode':
         possibleTestModeStr = ' testMode'
         print '>>> Using test mode.'
-        
+
 obsList = []
 f = open('inList.txt', 'r')
 for line in f:
     t0 = line.split()
-    if len(t0) != 1: continue
+    if len(t0) != 1:
+        continue
     obsList.append(t0[0])
 
 f.close()
@@ -46,7 +49,8 @@ for i in range(len(obsList)):
     #jobIdPlusI = jobId + '_' + str(i)
     cwd0 = os.getcwd()
     f0 = open('/share/home/krughoff/catalogGenFramework/sTScripts/tempST%s.csh' % jobId, 'w')
-    f0.write('#!/bin/csh\n#PBS -N %i_sT%s\n#PBS -l qos=astro,walltime=47:59:59,nodes=1:ppn=1\n#PBS -e /share/home/krughoff/catalogGenFramework/out/sT%s.err\n#PBS -o /share/home/krughoff/catalogGenFramework/out/sT%s.out\n\ncd %s\nsource setupOldAthena.csh\npython ./testThrottleObsListRun.py %s %s %s %s%s\necho Finished.' % (i, jobId, jobId, jobId, cwd0, nFN, jobId, obsList[i], str(radDeg), possibleTestModeStr))
+    f0.write('#!/bin/csh\n#PBS -N %i_sT%s\n#PBS -l qos=astro,walltime=47:59:59,nodes=1:ppn=1\n#PBS -e /share/home/krughoff/catalogGenFramework/out/sT%s.err\n#PBS -o /share/home/krughoff/catalogGenFramework/out/sT%s.out\n\ncd %s\nsource setupOldAthena.csh\npython ./testThrottleObsListRun.py %s %s %s %s%s\necho Finished.' %
+             (i, jobId, jobId, jobId, cwd0, nFN, jobId, obsList[i], str(radDeg), possibleTestModeStr))
     f0.close()
     # Use this from a compute node
     t0 = 'ssh minerva0 "(cd %s; /opt/torque/bin/qsub ./sTScripts/tempST%s.csh)"' % (cwd0, jobId)

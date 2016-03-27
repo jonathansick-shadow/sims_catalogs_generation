@@ -1,5 +1,7 @@
-import os, sys
+import os
+import sys
 import jobAllocator
+
 
 def makeTrimCatalog(workDir, chunkSize0, obsHistId, maxCats):
     if not os.path.exists(workDir):

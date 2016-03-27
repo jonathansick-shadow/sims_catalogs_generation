@@ -1,8 +1,13 @@
 # execfile('testThrottleObsListRun.py')
 
-import os, sys, time, random, signal
+import os
+import sys
+import time
+import random
+import signal
 from lsst.sims.catalogs.generation.db import jobDB
 import throttleUtils
+
 
 def signalHandler(sig, func=None):
     print '*** CAUGHT SIGNAL; EXITING.'
@@ -11,7 +16,7 @@ def signalHandler(sig, func=None):
 if __name__ == '__main__':
     print 'Registering signal handler.'
     signal.signal(signal.SIGTERM, signalHandler)
-    
+
     print 'Started with args:'
     for i in range(1, len(sys.argv)):
         print sys.argv[i]
@@ -30,15 +35,15 @@ if __name__ == '__main__':
     t0 = int(startTime)
     d.updateState(procId, 'JobRunning_%s_%i' % (obsId, t0))
     print 'Update state: %s to JobRunning_%s_%i' % (procId, obsId, t0)
-    #HACK this should be changed to just call the catalog generation classes
-    #Rob says this may be an issue because he checks the error code on exit.
+    # HACK this should be changed to just call the catalog generation classes
+    # Rob says this may be an issue because he checks the error code on exit.
     if testMode == False:
         t0 = 'python $CATALOGS_GENERATION_DIR/bin/runFiles.py %s %s'
         t1 = t0 % (obsId, rad)
     else:
         t0 = None
         t1 = 'python $CATALOGS_GENERATION_DIR/bin/fakeRunFiles.py'
-        
+
     succeeded = False
     nAttempsRemaining = 10
     numRetries = 0
@@ -74,5 +79,5 @@ if __name__ == '__main__':
         throttleUtils.removeFinishedJob(d, procId, extraStr)
     else:
         throttleUtils.removeFailedJob(d, procId, extraStr)
-        
+
     throttleUtils.showStates(d)

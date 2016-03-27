@@ -2,12 +2,18 @@
 
 execfile('r.py')
 
-import os, sys, gzip, numpy, random
+import os
+import sys
+import gzip
+import numpy
+import random
 import lsst.afw.detection as afwDetection
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 import lsst.meas.astrom.sip as sip
-import simplePlot, pyCommon, matchTrimToDet
+import simplePlot
+import pyCommon
+import matchTrimToDet
 from lsst.sims.catalogs.measures.astrometry.Astrometry import *
 
 refMagThresh = 23
@@ -39,7 +45,8 @@ tFile = 'trim2544_85501858_0StarsAdded'
 print 'eimage file:', eFile
 print 'trim file:', tFile
 outDir = './out%s/' % eFile
-if not os.path.exists(outDir): os.system('mkdir ' + outDir)
+if not os.path.exists(outDir):
+    os.system('mkdir ' + outDir)
 else:
     if os.path.exists(outDir + 'wCS.dat'):
         print '*** %s is already done; skipping.' % outDir
@@ -81,7 +88,8 @@ if eFile.startswith('eimage'):
 elif eFile.startswith('v'):
     plotTitle = 'ObsHistID: %s, %s %s Filter: %s' % (
         eFile[1:9], eFile[11:14], eFile[14:17], eFile[10])
-else: raise RuntimeError, '*** Unknown file name format: %s' % eFile
+else:
+    raise RuntimeError, '*** Unknown file name format: %s' % eFile
 print 'plotTitle:', plotTitle
 
 eIm = afwImage.ImageF(eFile)
@@ -95,8 +103,9 @@ if eFile.startswith('eimage'):
                 t0 = eImFakeBG.get(i, j)
                 eImFakeBG.set(i, j, t0 + 1)
     useEImForBG = eImFakeBG
-else: useEImForBG = eIm
-            
+else:
+    useEImForBG = eIm
+
 print 'Done adding fake background.'
 metaData = afwImage.readMetadata(eFile)
 wcs = afwImage.makeWcs(metaData)
@@ -110,8 +119,9 @@ if eFile.startswith('v'):
     # We must un-hack the CRVALs to precess them back to coords that
     #  match the trim file (See ticket #1418.)
     print 'Un-hacking CRVALs in v* image.'
-    t0 = { 'u':'0', 'g':'1', 'r':'2', 'i':'3', 'z':'4', 'y':'5' }
-    if t0[eFile[10]] == 'y': minCtsBrightThresh = 500
+    t0 = {'u': '0', 'g': '1', 'r': '2', 'i': '3', 'z': '4', 'y': '5'}
+    if t0[eFile[10]] == 'y':
+        minCtsBrightThresh = 500
     eImageFile = 'eimage_%s_%s_%s_E000.fits.gz' % (
         eFile[1:9], eFile[11:14], eFile[14:17])
     if not os.path.exists(eImageFile):
@@ -149,7 +159,7 @@ if eFile.startswith('v'):
 
 # From 'throughputs.pdf' paper (Ivezic, Jones, Lupton)
 # Using y4 here
-zPMag1ctPers = { 'u':27.09, 'g':28.58, 'r':28.50, 'i':28.34, 'z':27.95, 'y':27.18 }
+zPMag1ctPers = {'u': 27.09, 'g': 28.58, 'r': 28.50, 'i': 28.34, 'z': 27.95, 'y': 27.18}
 
 # Get image bounds, assuming LINEAR WCS
 t0 = wcs.pixelToSky(0, 0)
@@ -161,9 +171,9 @@ minRA = min(t0.getPosition()[0], t1.getPosition()[0],
 maxRA = max(t0.getPosition()[0], t1.getPosition()[0],
             t2.getPosition()[0], t3.getPosition()[0])
 minDec = min(t0.getPosition()[1], t1.getPosition()[1],
-            t2.getPosition()[1], t3.getPosition()[1])
+             t2.getPosition()[1], t3.getPosition()[1])
 maxDec = max(t0.getPosition()[1], t1.getPosition()[1],
-            t2.getPosition()[1], t3.getPosition()[1])
+             t2.getPosition()[1], t3.getPosition()[1])
 
 if eFile.startswith('eimage'):
     # There shouldn't be many sources in negative
@@ -172,26 +182,37 @@ if eFile.startswith('eimage'):
     footprintsN = detSetN.getFootprints()
     if len(footprintsN) > 0:
         raise RuntimeError, '*** Unexpected negative source.'
-    else: print '   No negative footprints found, as expected.'
+    else:
+        print '   No negative footprints found, as expected.'
 
 regOut = open(outDir + 'pDet.reg', 'w')
 print 'Making positive footprint detections.'
 detSetP = afwDetection.makeFootprintSet(useEImForBG, afwDetection.createThreshold(5, "stdev"))
 footprintsP = detSetP.getFootprints()
 nf = len(footprintsP)
-detxs = []; detys = []; nCts = []; estSizePix = []
-n = 0; boxSize = 2; circleSize = 20
+detxs = []
+detys = []
+nCts = []
+estSizePix = []
+n = 0
+boxSize = 2
+circleSize = 20
 print 'Considering %i positive footprints.' % len(footprintsP)
 fAllFPP = open(outDir + 'fAllFPP.reg', 'w')
 for fp in footprintsP:
-    if n % 10000 == 0: print '%i of %i done.' % (n, nf)
+    if n % 10000 == 0:
+        print '%i of %i done.' % (n, nf)
     bboxes = afwDetection.footprintToBBoxList(fp)
-    tCts = 0; ctsWtSumx = 0; ctsWtSumy = 0; nPix = 0
+    tCts = 0
+    ctsWtSumx = 0
+    ctsWtSumy = 0
+    nPix = 0
     for bbox in bboxes:
         x0, y0, x1, y1 = bbox.getX0(), bbox.getY0(), bbox.getX1(), bbox.getY1()
-        dx = x1 - x0; dy = y1 - y0
+        dx = x1 - x0
+        dy = y1 - y0
         fAllFPP.write('box %5.3f %5.3f %5.3f %5.3f #color=yellow\n' % (
-            min([x0,x1])+0.5*dx, min([y0,y1])+0.5*dy, dx, dy))
+            min([x0, x1])+0.5*dx, min([y0, y1])+0.5*dy, dx, dy))
         for x in range(x0, x1 + 1):
             for y in range(y0, y1 + 1):
                 t0 = eIm.get(x, y)
@@ -199,47 +220,66 @@ for fp in footprintsP:
                 ctsWtSumx += 0.5*(x0 + x1) * t0
                 ctsWtSumy += 0.5*(y0 + y1) * t0
                 nPix += 1
-    ctsWtSumx /= float(tCts); ctsWtSumy /= float(tCts)
-    #regOut.write('box %5.5f %5.5f %i %i 0 # color=darkgoldenrod2\n' % (ctsWtSumx, ctsWtSumy, boxSize, boxSize))
-    detxs.append(ctsWtSumx); detys.append(ctsWtSumy)
-    nCts.append(tCts); estSizePix.append(nPix)
+    ctsWtSumx /= float(tCts)
+    ctsWtSumy /= float(tCts)
+    # regOut.write('box %5.5f %5.5f %i %i 0 # color=darkgoldenrod2\n' %
+    # (ctsWtSumx, ctsWtSumy, boxSize, boxSize))
+    detxs.append(ctsWtSumx)
+    detys.append(ctsWtSumy)
+    nCts.append(tCts)
+    estSizePix.append(nPix)
     if tCts > minCtsBrightThresh:
         regOut.write('circle %5.5f %5.5f %i # color=indianred\n' % (ctsWtSumx, ctsWtSumy, circleSize))
     n += 1
 
 fAllFPP.close()
 
-detxs = numpy.array(detxs); detys = numpy.array(detys)
-nCts = numpy.array(nCts); estSizePix = numpy.array(estSizePix)
+detxs = numpy.array(detxs)
+detys = numpy.array(detys)
+nCts = numpy.array(nCts)
+estSizePix = numpy.array(estSizePix)
 
 # Now get all the bright sources out of the ref cat
 print 'Getting bright sources from ref cat.'
-refMagCols = { 'u':8, 'g':9, 'r':10, 'i':11, 'z':12, 'y':13 }
+refMagCols = {'u': 8, 'g': 9, 'r': 10, 'i': 11, 'z': 12, 'y': 13}
 refMagCol = refMagCols[filter0]
-refRAsIn = []; refDecsIn = []; refMagsIn = []
-galaxyType = 1; wDType = 2; kuruczType = 3; mLTType = 4; sSMType = 5
-if rFile.endswith('.gz'): f = gzip.open(rFile, 'r')
-else: f = open(rFile, 'r')
+refRAsIn = []
+refDecsIn = []
+refMagsIn = []
+galaxyType = 1
+wDType = 2
+kuruczType = 3
+mLTType = 4
+sSMType = 5
+if rFile.endswith('.gz'):
+    f = gzip.open(rFile, 'r')
+else:
+    f = open(rFile, 'r')
 refLine = 0
 for line in f:
-    if line.startswith('ra,decl,gal_l,gal_b'): continue
-    if refLine % 1000000 == 0: print 'Ref line: %i' % refLine
+    if line.startswith('ra,decl,gal_l,gal_b'):
+        continue
+    if refLine % 1000000 == 0:
+        print 'Ref line: %i' % refLine
     t0 = line.split(',')
-    #if float(t0[refMagCol]) > refMagThresh:
+    # if float(t0[refMagCol]) > refMagThresh:
     #    refLine += 1
     #    continue
     t1 = float(t0[0])
-    if t1 < 0: t1 += 360.
+    if t1 < 0:
+        t1 += 360.
     refRA0 = t1
     t1 = float(t0[1])
     refDec0 = t1
-    refRAsIn.append(refRA0); refDecsIn.append(refDec0)
+    refRAsIn.append(refRA0)
+    refDecsIn.append(refDec0)
     refMagsIn.append(float(t0[refMagCol]))
     refLine += 1
 
 f.close()
 
-refRAsIn = numpy.array(refRAsIn); refDecsIn = numpy.array(refDecsIn)
+refRAsIn = numpy.array(refRAsIn)
+refDecsIn = numpy.array(refDecsIn)
 refMagsIn = numpy.array(refMagsIn)
 
 print 'Precessing ref cat.'
@@ -251,27 +291,36 @@ refRAsPrec *= degPerRad
 refDecsPrec *= degPerRad
 
 print 'Finding ref cat on chip.'
-refxs = []; refys = []; refMags = []; refRAs = []; refDecs = []
+refxs = []
+refys = []
+refMags = []
+refRAs = []
+refDecs = []
 refChipI = 0
 for i in range(len(refRAsIn)):
-    if refChipI % 1000000 == 0: print 'Ref line: %i' % refChipI
+    if refChipI % 1000000 == 0:
+        print 'Ref line: %i' % refChipI
     t2 = wcs.skyToPixel(refRAsPrec[i], refDecsPrec[i])
     if t2.getX() < -chipBorder or t2.getY() < -chipBorder \
-           or t2.getX() > eIm.getWidth()+chipBorder \
-           or t2.getY() > eIm.getHeight()+chipBorder:
+            or t2.getX() > eIm.getWidth()+chipBorder \
+            or t2.getY() > eIm.getHeight()+chipBorder:
         refChipI += 1
         continue
-    #print 'Adding a source from ref.'
-    refxs.append(t2.getX()); refys.append(t2.getY())
-    refRAs.append(refRAsIn[i]); refDecs.append(refDecsIn[i])
+    # print 'Adding a source from ref.'
+    refxs.append(t2.getX())
+    refys.append(t2.getY())
+    refRAs.append(refRAsIn[i])
+    refDecs.append(refDecsIn[i])
     refMags.append(refMagsIn[i])
     refChipI += 1
 
 f.close()
 
-refxs = numpy.array(refxs); refys = numpy.array(refys)
+refxs = numpy.array(refxs)
+refys = numpy.array(refys)
 refMags = numpy.array(refMags)
-refRAs = numpy.array(refRAs); refDecs = numpy.array(refDecs)
+refRAs = numpy.array(refRAs)
+refDecs = numpy.array(refDecs)
 nRef = len(refxs)
 print 'Found %i ref cat sources that fall on chip.' % nRef
 
@@ -280,66 +329,95 @@ print 'Found %i ref cat sources that fall on chip.' % nRef
 
 # Now get all the bright sources out of the trim file
 print 'Getting bright sources from trim file.'
-trimxs = []; trimys = []; trimMags = []; trimTypes = []
-galaxyType = 1; wDType = 2; kuruczType = 3; mLTType = 4; sSMType = 5
-if tFile.endswith('.gz'): f = gzip.open(tFile, 'r')
-else: f = open(tFile, 'r')
+trimxs = []
+trimys = []
+trimMags = []
+trimTypes = []
+galaxyType = 1
+wDType = 2
+kuruczType = 3
+mLTType = 4
+sSMType = 5
+if tFile.endswith('.gz'):
+    f = gzip.open(tFile, 'r')
+else:
+    f = open(tFile, 'r')
 trimLine = 0
 if tFile != outDir + 'onChipTrim.txt':
     fTrim = open(outDir + 'onChipTrim.txt', 'w')
 for line in f:
-    if trimLine % 1000000 == 0: print 'Trim line: %i' % trimLine
+    if trimLine % 1000000 == 0:
+        print 'Trim line: %i' % trimLine
     if not line.startswith('object '):
         trimLine += 1
         continue
     t0 = line.split()
-    #if float(t0[4]) > trimMagThresh:
+    # if float(t0[4]) > trimMagThresh:
     #    trimLine += 1
     #    continue
     t1 = float(t0[2]) * degPerRad
-    if t1 < 0: t1 += 360.
+    if t1 < 0:
+        t1 += 360.
     trimRA0 = t1
-    #if trimRA0 < minRA or trimRA0 > maxRA:
+    # if trimRA0 < minRA or trimRA0 > maxRA:
     #    trimLine += 1
     #    continue
     t1 = float(t0[3]) * degPerRad
     trimDec0 = t1
-    #if trimDec0 < minDec or trimDec0 > maxDec:
+    # if trimDec0 < minDec or trimDec0 > maxDec:
     #    trimLine += 1
     #    continue
     t2 = wcs.skyToPixel(trimRA0, trimDec0)
     if t2.getX() < -chipBorder or t2.getY() < -chipBorder \
-           or t2.getX() > eIm.getWidth()+chipBorder \
-           or t2.getY() > eIm.getHeight()+chipBorder:
+            or t2.getX() > eIm.getWidth()+chipBorder \
+            or t2.getY() > eIm.getHeight()+chipBorder:
         trimLine += 1
         continue
-    #print 'Adding a source from trim.'
-    trimxs.append(t2.getX()); trimys.append(t2.getY())
+    # print 'Adding a source from trim.'
+    trimxs.append(t2.getX())
+    trimys.append(t2.getY())
     trimMags.append(float(t0[4]))
     t1 = t0[5]
-    if t1.find('galaxy') >= 0: trimTypes.append(galaxyType)
-    elif t1.find('wDs') >= 0: trimTypes.append(wDType)
-    elif t1.find('kurucz') >= 0: trimTypes.append(kuruczType)
-    elif t1.find('mlt') >= 0: trimTypes.append(mLTType)
-    elif t1.find('ssm') >= 0: trimTypes.append(sSMType)
-    else: raise RuntimeError, '*** Unknown SED type: %s' % t1
-    if tFile != 'onChipTrim.txt': fTrim.write(line)
+    if t1.find('galaxy') >= 0:
+        trimTypes.append(galaxyType)
+    elif t1.find('wDs') >= 0:
+        trimTypes.append(wDType)
+    elif t1.find('kurucz') >= 0:
+        trimTypes.append(kuruczType)
+    elif t1.find('mlt') >= 0:
+        trimTypes.append(mLTType)
+    elif t1.find('ssm') >= 0:
+        trimTypes.append(sSMType)
+    else:
+        raise RuntimeError, '*** Unknown SED type: %s' % t1
+    if tFile != 'onChipTrim.txt':
+        fTrim.write(line)
     trimLine += 1
 
 f.close()
-if tFile != 'onChipTrim.txt': fTrim.close()
+if tFile != 'onChipTrim.txt':
+    fTrim.close()
 
-trimxs = numpy.array(trimxs); trimys = numpy.array(trimys)
-trimMags = numpy.array(trimMags); trimTypes = numpy.array(trimTypes)
+trimxs = numpy.array(trimxs)
+trimys = numpy.array(trimys)
+trimMags = numpy.array(trimMags)
+trimTypes = numpy.array(trimTypes)
 nTrim = len(trimxs)
 for i in range(0, nTrim):
-    if trimMags[i] > trimMagThresh: continue
-    if trimTypes[i] == galaxyType: c0 = 'green'
-    elif trimTypes[i] == wDType: c0 = 'cyan'
-    elif trimTypes[i] == kuruczType: c0 = 'blue'
-    elif trimTypes[i] == mLTType: c0 = 'red'
-    elif trimTypes[i] == sSMType: c0 = 'yellow'
-    else: raise RuntimeError, '*** Unknown SED Type: %s' % trimTypes[i]
+    if trimMags[i] > trimMagThresh:
+        continue
+    if trimTypes[i] == galaxyType:
+        c0 = 'green'
+    elif trimTypes[i] == wDType:
+        c0 = 'cyan'
+    elif trimTypes[i] == kuruczType:
+        c0 = 'blue'
+    elif trimTypes[i] == mLTType:
+        c0 = 'red'
+    elif trimTypes[i] == sSMType:
+        c0 = 'yellow'
+    else:
+        raise RuntimeError, '*** Unknown SED Type: %s' % trimTypes[i]
     regOut.write('box %5.5f %5.5f 20 20 0 # color=%s\n' % (
         trimxs[i], trimys[i], c0))
 
@@ -351,8 +429,8 @@ t1 = pyCommon.arrayAnd([trimMags < trimMagThresh, trimTypes != galaxyType,
                         trimTypes != sSMType])
 t2 = numpy.where(t1)[0]
 bestRefTrimXOffset, bestRefTrimYOffset, t1, t2 = \
-                 matchTrimToDet.searchTrimDetMatch(
-    refxs[t0], refys[t0], trimxs[t2], trimys[t2])
+    matchTrimToDet.searchTrimDetMatch(
+        refxs[t0], refys[t0], trimxs[t2], trimys[t2])
 print 'Found match dx: %5.2f, dy: %5.2f pix' % (
     bestRefTrimXOffset, bestRefTrimYOffset)
 offrefxsTrim = refxs + bestRefTrimXOffset
@@ -369,26 +447,26 @@ simplePlot.clear()
 simplePlot.plot(refMags, trimMags[trimToRef], f='ko')
 
 
-## Apparently matching ref directly to image doesn't work well
-#print 'Matching ref catalog to image detection.'
+# Apparently matching ref directly to image doesn't work well
+# print 'Matching ref catalog to image detection.'
 #t0 = numpy.where(refMags < refMagThresh)[0]
-#t1 = pyCommon.arrayAnd([trimMags < trimMagThresh, trimTypes != galaxyType,
+# t1 = pyCommon.arrayAnd([trimMags < trimMagThresh, trimTypes != galaxyType,
 #                        trimTypes != sSMType])
 #t2 = numpy.where(nCts > minCtsBrightThresh)[0]
-#bestRefDetXOffset, bestRefDetYOffset, t1, t2 = \
+# bestRefDetXOffset, bestRefDetYOffset, t1, t2 = \
 #                 matchTrimToDet.searchTrimDetMatch(
 #    refxs[t0], refys[t0], detxs[t2], detys[t2])
-#print 'Found match dx: %5.2f, dy: %5.2f pix' % (
+# print 'Found match dx: %5.2f, dy: %5.2f pix' % (
 #    bestRefTrimXOffset, bestRefTrimYOffset)
 #offrefxsDet = refxs + bestRefTrimXOffset
 #offrefysDet = refys + bestRefTrimYOffset
 #
-## Now recalculate for the final pixDist and detToRef
-#refPixDistsDet, detToRef, t0, t1 = matchTrimToDet.matchTrimToDet(
+# Now recalculate for the final pixDist and detToRef
+# refPixDistsDet, detToRef, t0, t1 = matchTrimToDet.matchTrimToDet(
 #    offrefxsDet, offrefysDet, detxs, detys)
 
 #t0 = numpy.where(nCts > minCtsBrightThresh)[0]
-#simplePlot.clear()
+# simplePlot.clear()
 #simplePlot.plot(detxs[t0], detys[t0], f='ko')
 #simplePlot.plot(offrefxsDet, offrefysDet, f='r.')
 
@@ -406,20 +484,28 @@ t2 = numpy.where(nCts > minCtsBrightThresh)[0]
 simplePlot.clear()
 simplePlot.plot(trimxs[t1], trimys[t1], f='ko')
 simplePlot.plot(detxs[t2], detys[t2], f='r.')
-#reload(matchTrimToDet);
-bestTrimDetXOffset, bestTrimDetYOffset, t0, t1 = matchTrimToDet.searchTrimDetMatch(trimxs[t1], trimys[t1], detxs[t2], detys[t2])
+# reload(matchTrimToDet);
+bestTrimDetXOffset, bestTrimDetYOffset, t0, t1 = matchTrimToDet.searchTrimDetMatch(trimxs[t1], trimys[
+                                                                                   t1], detxs[t2], detys[t2])
 print 'Found match dx: %5.2f, dy: %5.2f pix' % (
     bestTrimDetXOffset, bestTrimDetYOffset)
 offtrimxs = trimxs + bestTrimDetXOffset
 offtrimys = trimys + bestTrimDetYOffset
 for i in range(0, nTrim):
-    if trimMags[i] > trimMagThresh: continue
-    if trimTypes[i] == galaxyType: c0 = 'green'
-    elif trimTypes[i] == wDType: c0 = 'cyan'
-    elif trimTypes[i] == kuruczType: c0 = 'blue'
-    elif trimTypes[i] == mLTType: c0 = 'red'
-    elif trimTypes[i] == sSMType: c0 = 'yellow'
-    else: raise RuntimeError, '*** Unknown SED Type: %s' % trimTypes[i]
+    if trimMags[i] > trimMagThresh:
+        continue
+    if trimTypes[i] == galaxyType:
+        c0 = 'green'
+    elif trimTypes[i] == wDType:
+        c0 = 'cyan'
+    elif trimTypes[i] == kuruczType:
+        c0 = 'blue'
+    elif trimTypes[i] == mLTType:
+        c0 = 'red'
+    elif trimTypes[i] == sSMType:
+        c0 = 'yellow'
+    else:
+        raise RuntimeError, '*** Unknown SED Type: %s' % trimTypes[i]
     regOut.write('box %5.5f %5.5f 10 10 0 # color=%s\n' % (
         offtrimxs[i], offtrimys[i], c0))
 
@@ -445,11 +531,10 @@ simplePlot.plot(refMags[t0], numpy.log10(trimCts[t1]), f='b.')
 
 #refCts = nCts[detToRef]
 
-## Apparently matching ref directly to image doesn't work well
+# Apparently matching ref directly to image doesn't work well
 #t0 = numpy.where(trimTypes[trimToRef] == kuruczType)[0]
-#simplePlot.clear()
+# simplePlot.clear()
 #simplePlot.plot(refMags[t0], numpy.log10(refCts[t0]), f='k.')
-
 
 
 def makeDistDistrib(x, bLo, bHi):
@@ -463,6 +548,7 @@ def makeDistDistrib(x, bLo, bHi):
         retVal[t1] += 1
     return retVal
 
+
 def plotThem(bMid, y, fStr, yMin=None):
     y0 = numpy.array(y)
     if yMin != None:
@@ -475,7 +561,8 @@ bLo = 10**numpy.arange(-2, 3, dx)
 bHi = bLo * (10**dx)
 bMid = (bLo + bHi) / 2.
 simplePlot.clear()
-yMin = 0.5; yMax = 3
+yMin = 0.5
+yMax = 3
 t0 = numpy.where(trimTypes == galaxyType)[0]
 t1 = makeDistDistrib(trimPixDists[t0], bLo, bHi)
 #simplePlot.plot(bMid, numpy.log10(t1), f='g-')
@@ -510,7 +597,8 @@ simplePlot.savePNG(outDir + 'compareTrimEImageNumVsPixDist.png')
 
 
 # These are the cts, x, y of *detected* sources match to trim cat
-trimdetxs = detxs[detToTrim]; trimdetys = detys[detToTrim]
+trimdetxs = detxs[detToTrim]
+trimdetys = detys[detToTrim]
 trimEstSizePix = estSizePix[detToTrim]
 
 simplePlot.clear()
@@ -542,12 +630,14 @@ simplePlot.yrange(0.9 * min(t0), 1.1 * max(t0))
 simplePlot.title(plotTitle)
 simplePlot.savePNG(outDir + 'compareTrimEImageCtsVsFluxNormMag.png')
 
+
 def makeGoodBadRegions(mags0, cts0, xs0, ys0, zPMag1ctPers, filter0,
                        expoSec0, suffix0, minMag0, outDir):
     f = open(outDir + 'goodBadRegions' + suffix0 + '.reg', 'w')
     fFlipxy = open(outDir + 'goodBadRegionsFlipxy' + suffix0 + '.reg', 'w')
     for i in range(len(mags0)):
-        if mags0[i] > minMag0: continue
+        if mags0[i] > minMag0:
+            continue
         estCts0 = expoSec0 * 1. * 10**(0.4 * (
             zPMag1ctPers[filter0] - mags0[i]))
         print 'cts:', cts0[i], ' estCts:', estCts0
@@ -620,7 +710,7 @@ simplePlot.savePNG(outDir + 'compareTrimEImageCtsVsRefMag.png')
 
 
 #refToTrim = -1 * numpy.ones(len(trimTypes), dtype=int)
-#for i in range(len(trimToRef)):
+# for i in range(len(trimToRef)):
 #    refToTrim[trimToRef[i]] = i
 
 def calcRMS(x):
@@ -628,6 +718,7 @@ def calcRMS(x):
     t1 = numpy.sum(x**2)
     nx = float(len(x))
     return numpy.sqrt(t1 / (nx-1.))
+
 
 def calcMAD(x):
     t0 = abs(x - numpy.median(x))
@@ -654,7 +745,7 @@ t1 = pyCommon.arrayAnd(
     [t0 == True, refMags <= refMagThresh,
      trimCts[trimToRef] >= minCts0, trimCts[trimToRef] <= maxCts0,
      offtrimxs[trimToRef] >= 0, offtrimxs[trimToRef] < eIm.getWidth(),
-     offtrimys[trimToRef] >= 0, offtrimys[trimToRef] < eIm.getHeight() ])
+     offtrimys[trimToRef] >= 0, offtrimys[trimToRef] < eIm.getHeight()])
 wMSRef = numpy.where(t1)[0]
 wMSTrimToRef = trimToRef[t1]
 makeGoodBadRegions(refMags[wMSRef], trimCts[wMSTrimToRef],
@@ -699,16 +790,19 @@ simplePlot.clear()
 simplePlot.plot(bMid, t2, f='k-')
 t3 = makeDistDistrib(resDecArcsec, bLo, bHi)
 simplePlot.plot(bMid, t3, f='b-')
-simplePlot.plot([0,0], simplePlot.getyrange(), f='k:')
+simplePlot.plot([0, 0], simplePlot.getyrange(), f='k:')
 plt = simplePlot.getplt()
 plt.legend(('RA', 'Dec'), loc='upper right')
 simplePlot.xlabel('WCS Residual to Matched Star (arcsec)')
 simplePlot.ylabel('Number of Cases')
-t0 = calcRMS(resRAArcsec); t1 = calcMAD(resRAArcsec)
-t2 = calcRMS(resDecArcsec); t3 = calcMAD(resDecArcsec)
+t0 = calcRMS(resRAArcsec)
+t1 = calcMAD(resRAArcsec)
+t2 = calcRMS(resDecArcsec)
+t3 = calcMAD(resDecArcsec)
 (xMin, xMax) = simplePlot.getxrange()
 (yMin, yMax) = simplePlot.getyrange()
-dx = xMax - xMin; dy = yMax - yMin
+dx = xMax - xMin
+dy = yMax - yMin
 usex = xMin + 0.1*dx
 simplePlot.text(usex, yMax - 0.10*dy, 'RA sample var: %2.3f' % t0)
 simplePlot.text(usex, yMax - 0.15*dy, 'RA MAD: %2.3f' % t1)
@@ -718,25 +812,25 @@ simplePlot.title(plotTitle)
 simplePlot.savePNG(outDir + 'WCSResidualDeg.png')
 
 #f = open(outDir + 'testWCS.reg', 'w')
-#for i in range(len(x)):
+# for i in range(len(x)):
 #    f.write('circle %5.3f %5.3f 10 #color=green\n' % (x[i], y[i]))
 #
-#f.close()
+# f.close()
 
 
 def fitSkyToPix(rA0, dec0, rADecToxFit, rADecToyFit):
-    t0 = rADecToxFit.getParams()[0,0]
-    t0 += rADecToxFit.getParams()[1,0]*rA0
-    t0 += rADecToxFit.getParams()[0,1]*dec0
-    t1 = rADecToyFit.getParams()[0,0]
-    t1 += rADecToyFit.getParams()[1,0]*rA0
-    t1 += rADecToyFit.getParams()[0,1]*dec0
+    t0 = rADecToxFit.getParams()[0, 0]
+    t0 += rADecToxFit.getParams()[1, 0]*rA0
+    t0 += rADecToxFit.getParams()[0, 1]*dec0
+    t1 = rADecToyFit.getParams()[0, 0]
+    t1 += rADecToyFit.getParams()[1, 0]*rA0
+    t1 += rADecToyFit.getParams()[0, 1]*dec0
     return (t0, t1)
 
 xyToRAFit.printParams()
-t0 = xyToRAFit.getParams()[0,0] +\
-     xyToRAFit.getParams()[1,0]*trimdetxs[wMSTrimToRef] +\
-     xyToRAFit.getParams()[0,1]*trimdetys[wMSTrimToRef]
+t0 = xyToRAFit.getParams()[0, 0] +\
+    xyToRAFit.getParams()[1, 0]*trimdetxs[wMSTrimToRef] +\
+    xyToRAFit.getParams()[0, 1]*trimdetys[wMSTrimToRef]
 t1 = t0 - refRAs[wMSRef]
 simplePlot.clear()
 simplePlot.plot(refRAs[wMSRef], t0, f='k.')
@@ -746,10 +840,10 @@ f.write('%5.7f %5.7f\n' % (
     xyToRAFit.valueAt(0, 0), xyToDecFit.valueAt(0, 0)))
 f.write('%5.7f %5.7f\n' % (
     xyToRAFit.valueAt(
-    eIm.getWidth()-1, 0), xyToDecFit.valueAt(eIm.getWidth()-1, 0)))
+        eIm.getWidth()-1, 0), xyToDecFit.valueAt(eIm.getWidth()-1, 0)))
 f.write('%5.7f %5.7f\n' % (
     xyToRAFit.valueAt(
-    0, eIm.getHeight()-1), xyToDecFit.valueAt(0, eIm.getHeight()-1)))
+        0, eIm.getHeight()-1), xyToDecFit.valueAt(0, eIm.getHeight()-1)))
 f.write('%5.7f %5.7f\n' % (
     xyToRAFit.valueAt(eIm.getWidth()-1, eIm.getHeight()-1),
     xyToDecFit.valueAt(eIm.getWidth()-1, eIm.getHeight()-1)))
@@ -760,9 +854,11 @@ f.close()
 print 'Writing region file using WCS fit.'
 f = open(outDir + 'wCSStars.reg', 'w')
 for i in range(0, len(refMags)):
-    (x0, y0) = fitSkyToPix(refRAs[i], refDecs[i], rADecToxFit, rADecToyFit);
-    if x0 < 0 or x0 > eIm.getWidth(): continue
-    if y0 < 0 or y0 > eIm.getHeight(): continue
+    (x0, y0) = fitSkyToPix(refRAs[i], refDecs[i], rADecToxFit, rADecToyFit)
+    if x0 < 0 or x0 > eIm.getWidth():
+        continue
+    if y0 < 0 or y0 > eIm.getHeight():
+        continue
     if refMags[i] > refMagThresh:
         f.write('circle %5.3f %5.3f 10 10 # color=yellow\n' % (x0, y0))
     else:
@@ -775,21 +871,27 @@ f.close()
 print 'Performing forced photo for %i objects (incl. non-stars)' % (
     len(refMags))
 refForcedCts = numpy.zeros(len(refMags)) - 1.
-forcedRad = 20; forcedRad2 = forcedRad**2
+forcedRad = 20
+forcedRad2 = forcedRad**2
 for i in range(0, len(refMags)):
     print 'Forced photo for object %i of %i' % (i, len(refMags))
-    (x0, y0) = fitSkyToPix(refRAs[i], refDecs[i], rADecToxFit, rADecToyFit);
-    if x0 < 0 or x0 >= eIm.getWidth(): continue
-    if y0 < 0 or y0 >= eIm.getHeight(): continue
+    (x0, y0) = fitSkyToPix(refRAs[i], refDecs[i], rADecToxFit, rADecToyFit)
+    if x0 < 0 or x0 >= eIm.getWidth():
+        continue
+    if y0 < 0 or y0 >= eIm.getHeight():
+        continue
     print 'Looking at x0, y0:', x0, y0
     tCts = 0.
     for j in range(int(x0-forcedRad-1), int(x0+forcedRad+1)):
         # If you get() off image bounds, seg-fault ensues
-        if j < 0 or j >= eIm.getWidth(): continue
+        if j < 0 or j >= eIm.getWidth():
+            continue
         for k in range(int(y0-forcedRad-1), int(y0+forcedRad+1)):
-            if k < 0 or k >= eIm.getHeight(): continue
+            if k < 0 or k >= eIm.getHeight():
+                continue
             t0 = (j-x0)**2 + (k-y0)**2
-            if t0 > forcedRad2: continue
+            if t0 > forcedRad2:
+                continue
             tCts += eIm.get(j, k)
     refForcedCts[i] = tCts
     print '   Found %5.1f cts.' % tCts
@@ -830,7 +932,6 @@ simplePlot.title(plotTitle)
 simplePlot.savePNG(outDir + 'compareTrimEImageCtsVsRefMagWCSForcedPhoto.png')
 
 
-
 t0 = zPMag1ctPers[filter0]
 estCts0 = numpy.log10(expoSec * 1. * 10**(0.4 * (t0 - refMags)))
 t1 = pyCommon.arrayAnd([
@@ -843,7 +944,7 @@ simplePlot.plot(refMags[t2], numpy.log10(refForcedCts[t2]), f='mo')
 
 f = open(outDir + 'test.reg', 'w')
 for i in range(len(t2)):
-    (x0, y0) = fitSkyToPix(refRAs[i], refDecs[i], rADecToxFit, rADecToyFit);
+    (x0, y0) = fitSkyToPix(refRAs[i], refDecs[i], rADecToxFit, rADecToyFit)
     f.write('circle %5.3f %5.3f 10 #color=cyan\n' % (x0, y0))
 
 f.close()

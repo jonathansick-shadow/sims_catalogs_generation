@@ -1,23 +1,29 @@
 # execfile('throttleUtils.py')
 
-import os, sys, time
+import os
+import sys
+import time
 from lsst.sims.catalogs.generation.db import jobDB
+
 
 def getCopyDBM(iD):
     eDBM = jobDB.JobState(iD)
     return eDBM
+
 
 def showStates(eDBM):
     d = eDBM.showStates()
     for k in d.keys():
         print k + ': ' + d[k]
 
+
 def addJob(eDBM, jobId, extraText):
     # This is a concurrency issue, as the job states could change
     #  between the time we check the number and the time we increment,
     #  etc.  We really need to lock the DB.
     t0 = eDBM.queryState('NumJobsRunning')
-    if t0 == None: t0 = 0
+    if t0 == None:
+        t0 = 0
     print 'addJob: Current num: ', t0
     t1 = int(t0) + 1
     eDBM.updateState('NumJobsRunning', str(t1))
@@ -26,12 +32,14 @@ def addJob(eDBM, jobId, extraText):
     print 'Added job to execution DB: %s' % jobId
     showStates(eDBM)
 
+
 def removeFinishedJob(eDBM, jobId, extraText):
     # This is a concurrency issue, as the job states could change
     #  between the time we check the number and the time we increment,
     #  etc.  We really need to lock the DB.
     t0 = eDBM.queryState('NumJobsRunning')
-    if t0 == None: t0 = 0
+    if t0 == None:
+        t0 = 0
     print 'removeFinishedJob: Current num: ', t0
     t1 = int(t0) - 1
     eDBM.updateState('NumJobsRunning', str(t1))
@@ -40,12 +48,14 @@ def removeFinishedJob(eDBM, jobId, extraText):
     print 'Removed finished job from execution DB: %s' % jobId
     showStates(eDBM)
 
+
 def removeFailedJob(eDBM, jobId, extraText):
     # This is a concurrency issue, as the job states could change
     #  between the time we check the number and the time we increment,
     #  etc.  We really need to lock the DB.
     t0 = eDBM.queryState('NumJobsRunning')
-    if t0 == None: t0 = 0
+    if t0 == None:
+        t0 = 0
     print 'removeFailedJob: Current num: ', t0
     t1 = int(t0) - 1
     eDBM.updateState('NumJobsRunning', str(t1))
@@ -53,6 +63,7 @@ def removeFailedJob(eDBM, jobId, extraText):
     eDBM.updateState(jobId, 'JobFailedAndRemoved_%s' % (extraText))
     print 'Removed failed job from execution DB: %s' % jobId
     showStates(eDBM)
+
 
 def throttle(eDBM, maxNumJobs, throttleTime):
     print 'throttle: maxNumJobs is ', maxNumJobs
@@ -67,9 +78,12 @@ def throttle(eDBM, maxNumJobs, throttleTime):
         else:
             done = True
 
+
 def howManyJobs(eDBM):
     t0 = eDBM.queryState('NumJobsRunning')
-    if t0 == None: t0 = 0
-    else: t0 = int(t0)
+    if t0 == None:
+        t0 = 0
+    else:
+        t0 = int(t0)
     print 'howManyJobs: Current num: ', t0
     return t0

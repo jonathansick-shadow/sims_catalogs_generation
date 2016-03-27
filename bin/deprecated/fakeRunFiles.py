@@ -1,4 +1,7 @@
-import os, sys, time, random
+import os
+import sys
+import time
+import random
 
 if __name__ == "__main__":
     time.sleep(1)

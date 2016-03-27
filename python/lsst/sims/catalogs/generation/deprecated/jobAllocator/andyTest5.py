@@ -1,5 +1,10 @@
 #!/usr/bin/env python
-import numpy, math, copy, cPickle, os, sys
+import numpy
+import math
+import copy
+import cPickle
+import os
+import sys
 from lsst.sims.catalogs.generation.db import queryDB
 from lsst.sims.catalogs.measures.astrometry import Bbox
 import lsst.sims.catalogs.measures.utils as mUtils
@@ -11,6 +16,7 @@ obsId = 85679372
 #types = ['ALLSTARS', 'GALAXY_DISK', 'GALAXY_BULGE', 'AGN']
 types = ['ALLSTARS', 'AGN']
 
+
 def doIC(ic, myQDB, curMD, tNum):
     print 'HANDLING NEW IC'
     mUtils.trimGeneration.derivedTrimMetadata(ic)
@@ -21,9 +27,12 @@ def doIC(ic, myQDB, curMD, tNum):
     ic.validateData('TRIM')
     t0 = 'aT5IC%i' % tNum
     ic.writeCatalogData(t0 + '.txt', 'TRIM')
-    if curMD == None: curMD = copy.deepcopy(ic.metadata)
-    else: curMD.mergeMetadata(ic.metadata)
+    if curMD == None:
+        curMD = copy.deepcopy(ic.metadata)
+    else:
+        curMD.mergeMetadata(ic.metadata)
     return curMD
+
 
 def doQueryType(t, curMD, tNum, cSize=cSize, obsId=obsId):
     print 'NOW QUERYING:', t
@@ -38,4 +47,4 @@ def doQueryType(t, curMD, tNum, cSize=cSize, obsId=obsId):
 for t in types:
     curMD, tNum, myQDB = doQueryType(t, curMD, tNum)
 
-curMD.writeMetadata('aT5.meta','TRIM', myQDB.opsim, newfile = True)
+curMD.writeMetadata('aT5.meta', 'TRIM', myQDB.opsim, newfile = True)

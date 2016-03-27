@@ -1,7 +1,11 @@
-import random, os, numpy
+import random
+import os
+import numpy
 import getFileNameWC
 
+
 class MetaDataManager:
+
     def __init__(self):
         self.isCleared = True
         self.dict = {}
@@ -9,7 +13,7 @@ class MetaDataManager:
 
     def reset(self):
         self.isCleared = True
-        
+
     def mergeFromFile(self, inFile):
         """Load data from a file into a metaData object.  For this stub,
         we'll store the data as a dictionary of dictionaries.  The first
@@ -29,8 +33,10 @@ class MetaDataManager:
             useDict[keys[i]] = vals[i]
 
     def merge(self, metaData, file=None):
-        if file: useDict = self.dict[file]
-        else: useDict = self.dict['main']
+        if file:
+            useDict = self.dict[file]
+        else:
+            useDict = self.dict['main']
         keys = metaData.keys()
         for i in range(len(keys)):
             if useDict.has_key(keys[i]):
@@ -58,51 +64,58 @@ class MetaDataManager:
         if self.dict.has_key(inFile):
             raise ValueError, '*** File %s already loaded.' % inFile
         nPer = 10
-        keys = []; vals = []
+        keys = []
+        vals = []
         for i in range(nPer):
             keys.append(inFile + '_' + string(i))
             vals.append('val' + string(i))
         return keys, vals
 
-        
 
 class CatalogType:
+
     def __init__(self):
         self.isCleared = True
 
     def reset(self):
         self.isCleared = True
-        
+
     """Like an enum of catalog types."""
     pass
 
+
 class CatalogTypeManager:
+
     def __init__(self):
         self.isCleared = True
 
     def reset(self):
         self.isCleared = True
-        
+
     def verifyMetaData(self, catalogType, metaData):
         """Check that all the needed values are present."""
 
+
 class UIToDBManager:
+
     def __init__(self):
         self.isCleared = True
 
     def reset(self):
         self.isCleared = True
-        
+
     """Convert UI input to DB query."""
     def convert(uIInput):
         dBQuery = None
         return dBQuery
 
+
 class InstanceCatalog:
+
     def __init__(self, obsHistID, list, catalogType):
         self.ObsHistID = obsHistID
         self.List = list
-        self.MetaData = { 'ObsHistID' : obsHistID }
+        self.MetaData = {'ObsHistID': obsHistID}
         self.CatalogType = catalogType
 
     def writeToFile(self, fileName):
@@ -114,7 +127,9 @@ class InstanceCatalog:
     def getMetaData(self):
         return self.MetaData
 
+
 class DBRsp:
+
     def __init__(self, list, chunkSize=1000):
         self.List = list
         self.ChunkSize = chunkSize
@@ -127,7 +142,8 @@ class DBRsp:
             return InstanceCatalog(ObsHistID, self.List[0:self.ChunkSize], catalogType)
 
     def getNextChunk(self):
-        if self.CurChunk >= self.ChunkSize: return None
+        if self.CurChunk >= self.ChunkSize:
+            return None
         else:
             t0 = numpy.arange(self.CurChunk, min(len(self.List), self.CurChunk + self.ChunkSize))
             self.CurChunk += self.ChunkSize
@@ -135,6 +151,7 @@ class DBRsp:
 
 
 class DBQuery:
+
     def __init__(self):
         self.isCleared = True
 
@@ -147,7 +164,9 @@ class DBQuery:
             t0[i] = random.random()
         return DBRsp(t0)
 
+
 class ExecutionDBInterface:
+
     def __init__(self, stubDir='/local/tmp/jobAllocator/'):
         self.stubDir = stubDir.rstrip('/') + '/'
         self.isCleared = True
@@ -161,7 +180,7 @@ class ExecutionDBInterface:
         for t in t0:
             print 'Execution DB clearing job: %s' % t
             os.system('rm -f %s%s' % self.stubDir, t)
-        
+
     def addNewJob(self, jobId):
         self.clearJob(jobId)
         t0 = 'added_%s.edb' % jobId
@@ -171,8 +190,10 @@ class ExecutionDBInterface:
     def checkJobAdded(self, jobId):
         t0 = self.stubDir + 'added_%s.edb' % jobId
         print 'Execution DB checking if job added: %s' % t0
-        if os.path.exists(t0): print '... job exists'
-        else: print '... job does not exist (yet?)'
+        if os.path.exists(t0):
+            print '... job exists'
+        else:
+            print '... job does not exist (yet?)'
         return os.path.exists(t0)
 
     def startNewJob(self, jobId):
@@ -185,8 +206,10 @@ class ExecutionDBInterface:
     def checkJobStarted(self, jobId):
         t0 = self.stubDir + 'started_%s.edb' % jobId
         print 'Execution DB checking if job started... %s' % t0
-        if os.path.exists(t0): print '... job exists.'
-        else: print '... job DNE.'
+        if os.path.exists(t0):
+            print '... job exists.'
+        else:
+            print '... job DNE.'
         return os.path.exists(t0)
 
 

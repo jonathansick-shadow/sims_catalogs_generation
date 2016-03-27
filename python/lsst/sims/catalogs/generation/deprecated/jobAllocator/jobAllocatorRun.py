@@ -1,4 +1,7 @@
-import os, sys, cPickle, time
+import os
+import sys
+import cPickle
+import time
 import jobAllocatorStubs
 from lsst.sims.catalogs.generation.db import jobDB as jobDB
 
@@ -38,13 +41,14 @@ if __name__ == '__main__':
     print 'objectType:', objectType
 
     # RRG:  I'm told makeHelio is no longer needed.
-    #print jobIdStr, 'makeHelio...'
-    #instanceCat.makeHelio()
+    # print jobIdStr, 'makeHelio...'
+    # instanceCat.makeHelio()
 
     t0 = time.time()
     print jobIdStr, 'makeTrimCoords...'
     # RRG:  Layering violation; should go in InstanceCat
-    if objectType in varTypes: instanceCat.applyVariability()
+    if objectType in varTypes:
+        instanceCat.applyVariability()
     print 'applyVariability: %7.3f' % (time.time() - t0)
 
     t0 = time.time()
@@ -59,8 +63,8 @@ if __name__ == '__main__':
 
     # Don't move the file; I want to find it and cat it to a trim file
     #t0 = 'mv %s /share/sdata1/rgibson/catOut/' % dataFile
-    #print t0
-    #os.system(t0)
+    # print t0
+    # os.system(t0)
     t0 = time.time()
     d.updateState(procId, 'JAFinished')
     print 'Updated state: %s to JAFinished' % procId

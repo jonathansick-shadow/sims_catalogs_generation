@@ -1,5 +1,11 @@
 #!/usr/bin/env python
-import numpy, math, copy, cPickle, os, sys, cPickle
+import numpy
+import math
+import copy
+import cPickle
+import os
+import sys
+import cPickle
 from lsst.sims.catalogs.generation.db import queryDB
 from lsst.sims.catalogs.measures.astrometry import Bbox
 import lsst.sims.catalogs.measures.utils as mUtils
@@ -10,13 +16,16 @@ cSize = 500000
 obsId = 85679372
 types = ['ALLSTARS']
 
+
 def doIC(ic, myQDB, curMD, tNum):
     print 'HANDLING NEW IC'
     mUtils.trimGeneration.derivedTrimMetadata(ic)
     print ic.metadata.parameters
     ic.makeTrimCoords()
-    if curMD == None: curMD = copy.deepcopy(ic.metadata)
-    else: curMD.mergeMetadata(ic.metadata)
+    if curMD == None:
+        curMD = copy.deepcopy(ic.metadata)
+    else:
+        curMD.mergeMetadata(ic.metadata)
     tBase = 'aT6IC%i' % tNum
     print '   WRITING TO PICKLE'
     cPickle.dump(ic, open(tBase + '.p', 'w'))
@@ -27,6 +36,7 @@ def doIC(ic, myQDB, curMD, tNum):
     icNew.validateData('TRIM')
     icNew.writeCatalogData(tBase + '.txt', 'TRIM')
     return curMD
+
 
 def doQueryType(t, curMD, tNum, cSize=cSize, obsId=obsId):
     print 'NOW QUERYING:', t
@@ -41,4 +51,4 @@ def doQueryType(t, curMD, tNum, cSize=cSize, obsId=obsId):
 for t in types:
     curMD, tNum, myQDB = doQueryType(t, curMD, tNum)
 
-curMD.writeMetadata('aT6.meta','TRIM', myQDB.opsim, newfile = True)
+curMD.writeMetadata('aT6.meta', 'TRIM', myQDB.opsim, newfile = True)

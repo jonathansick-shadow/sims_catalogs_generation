@@ -31,17 +31,18 @@ A class to be used in source catalog generation.  Holds an orbit/MJD (epoch for 
 
 """
 
-from DayMOPSObject import DayMOPSObject  
+from DayMOPSObject import DayMOPSObject
 import numpy as n
 import pyoorb as oo
 
 
 class MovingObject(DayMOPSObject):
-    #DayMOPSObject provides automatic getters and setters based on "private" (_prefixed) variable names.
+    # DayMOPSObject provides automatic getters and setters based on "private" (_prefixed) variable names.
+
     def __init__(self, q, e, i, node, argPeri, timePeri, epoch, orb_timescale=3.0,
                  magHv=-99.9, phaseGv=0.15,
                  objtype=None, objid=None,
-                 index=None, n_par=None, moid=None, 
+                 index=None, n_par=None, moid=None,
                  isVar=None, var_t0=None, var_timescale=None, var_fluxmax=None,
                  sedname = None,
                  u_opp=None, g_opp=None, r_opp=None, i_opp=None, z_opp=None, y_opp=None):
@@ -63,15 +64,15 @@ class MovingObject(DayMOPSObject):
         # Set values for predicting magnitudes, if there is variability.
         self._isVar = isVar
         # var_t0 = the time of onset of variability.
-        self._var_t0 = var_t0  
+        self._var_t0 = var_t0
         # var_timescale = period of variability.
         self._var_timescale = var_timescale
         # var_fluxnorm = max amplitude of the variability, in flux (relative to fluxNorm).
-        self._var_fluxmax = var_fluxmax   
+        self._var_fluxmax = var_fluxmax
         # sedname = the SED name
         self._sedname = sedname
         # The opposition values for ugrizy come from the database, as they are precalculated.
-        self._u_opp = u_opp  
+        self._u_opp = u_opp
         self._g_opp = g_opp
         self._r_opp = r_opp
         self._i_opp = i_opp
@@ -87,14 +88,14 @@ class MovingObject(DayMOPSObject):
         """ Convert float/number mjdTai to string so can use for dictionary lookup.
 
         mjdTai should be a single floating point number, which is then returned as fixed-format string."""
-        mjdstr = "%.8f" %(mjdTai)
+        mjdstr = "%.8f" % (mjdTai)
         return mjdstr
-    
+
     def getOrbArrayPyoorb(self, format='COM'):
         """Returns values of the orbital elements, in format suitable for use in ephemeris routines. """
         # This is a method on MovingObject rather than Orbit because it includes the magnitude and phase.
         # COM format is all that is currently needed or supported, but could be expanded in future.
-        if format=='COM':
+        if format == 'COM':
             # Set up an array for pyoorb. The pyoorb array requires:
             # 0: orbitId
             # 1 - 6: orbital elements, using radians for angles
@@ -103,9 +104,9 @@ class MovingObject(DayMOPSObject):
             # 9: timescale for the epoch; 1= MJD_UTC, 2=UT1, 3=TT, 4=TAI
             # 10: H
             # 11: G
-            orbitsArray = n.empty([1, 12], dtype=n.double, order='F')            
+            orbitsArray = n.empty([1, 12], dtype=n.double, order='F')
             orbitsArray[0][:] = [self.getobjid(),
-                                 self.Orbit.getq(), 
+                                 self.Orbit.getq(),
                                  self.Orbit.gete(),
                                  n.radians(self.Orbit.geti()),
                                  n.radians(self.Orbit.getnode()),
@@ -115,15 +116,15 @@ class MovingObject(DayMOPSObject):
                                  self.Orbit.getepoch(),
                                  self.Orbit.getorb_timescale(),
                                  self.getmagHv(),
-                                 self.getphaseGv()] 
+                                 self.getphaseGv()]
             return orbitsArray
         else:
             # User requested format other than COM so we will currently return an exception.
             raise Exception('Only COM format orbital elements accepted')
-    
+
     def calcEphemeris(self, mjdTaiList, obscode=807, eph_timescale=4.0):
         """ Calculate an ephemeris position for a single object at a list of times (or a single time).
-        
+
         If calculating ephemerides for many objects, you should use the function in 
         MovingObjectList, as it should be faster. """
         # Convert float mjdTai's into strings for ephemeride dictionary lookup.
@@ -133,12 +134,12 @@ class MovingObject(DayMOPSObject):
             mjdTaiList = [mjdTaiList]
         for mjdTai in mjdTaiList:
             mjdTaiListStr.append(self.mjdTaiStr(mjdTai))
-        # Get orbit in pyoorb array format. 
+        # Get orbit in pyoorb array format.
         orbArray = self.getOrbArrayPyoorb()
         # Set up ephem_dates array for pyoorb.
-        ephem_dates = n.zeros([len(mjdTaiList),2], dtype=n.double, order='F')
+        ephem_dates = n.zeros([len(mjdTaiList), 2], dtype=n.double, order='F')
         for i in range(len(mjdTaiList)):
-            # The second element in dates is the units timescale of time .. 
+            # The second element in dates is the units timescale of time ..
             # UTC/UT1/TT/TAI = 1/2/3/4.
             ephem_dates[i][:] = [mjdTaiList[i], eph_timescale]
         # Calculate the ephemerides with a call to pyoorb.
@@ -147,24 +148,26 @@ class MovingObject(DayMOPSObject):
         ephems, err = oo.pyoorb.oorb_ephemeris(in_orbits = orbArray,
                                                in_obscode = obscode,
                                                in_date_ephems = ephem_dates)
-        if err!=0:
-            raise Exception('Error in generating ephemeris - errcode %d' %(err))
+        if err != 0:
+            raise Exception('Error in generating ephemeris - errcode %d' % (err))
         # set ephemerides
         for j in range(len(mjdTaiList)):
-                eph = ephems[0][j]
-                #  dradt = eph[6] - sky motion. Add /n.cos(n.radians(eph[2])) for RA coordinate motion.
-                self.Ephemerides[mjdTaiListStr[j]] = Ephemeris(mjdTai=mjdTaiList[j],
-                                                            ra=eph[1], dec=eph[2],
-                                                            magV=eph[3],
-                                                            distance=eph[0],
-                                                            dradt=eph[6], 
-                                                            ddecdt=eph[7])
+            eph = ephems[0][j]
+            #  dradt = eph[6] - sky motion. Add /n.cos(n.radians(eph[2])) for RA coordinate motion.
+            self.Ephemerides[mjdTaiListStr[j]] = Ephemeris(mjdTai=mjdTaiList[j],
+                                                           ra=eph[1], dec=eph[2],
+                                                           magV=eph[3],
+                                                           distance=eph[0],
+                                                           dradt=eph[6],
+                                                           ddecdt=eph[7])
         return
 
 #################
 
+
 class Orbit(DayMOPSObject):
     # Inherit underscore getters and setters from DayMOPSObject class
+
     def __init__(self, q, e, i, node, argPeri, timePeri, epoch, orb_timescale=3.0, format='COM'):
         """Initialize cometary format elements object.
 
@@ -174,10 +177,10 @@ class Orbit(DayMOPSObject):
 
     def setOrbElements(self, q, e, i, node, argPeri, timePeri, epoch, orb_timescale=3.0, format='COM'):
         """Set cometary format orbital elements for Orbit object.
-        
+
         COM style elements are: q(AU)/e/i(deg)/node(deg)/argPeri(deg)/timePeri/epoch of orbit combined
         with a timescale for the orbital times (UTC/UT1/TT/TAI = 1/2/3/4) for OpenOrb."""
-        if format=='COM':
+        if format == 'COM':
             self._q = q
             self._e = e
             self._i = i
@@ -185,7 +188,7 @@ class Orbit(DayMOPSObject):
             self._argPeri = argPeri
             self._timePeri = timePeri
             self._epoch = epoch
-            self._orb_timescale = 3.0  
+            self._orb_timescale = 3.0
             # OpenOrb assumes that cometary style orbits use timescale = 3 (TT)
             # TODO : check ranges of q/e/i/node/etc.
         else:
@@ -196,19 +199,19 @@ class Orbit(DayMOPSObject):
         """Compare orbital elements to check if two sets of orbital elements are exactly the same."""
         if (other == None):
             return False
-        if ((self.getq() == other.getq()) and (self.gete() == other.gete()) and 
-            (self.geti() == other.geti()) and (self.getnode() == other.getnode()) and 
-            (self.getargPeri() == other.getargPeri()) and (self.gettimePeri() == other.gettimePeri())):
+        if ((self.getq() == other.getq()) and (self.gete() == other.gete()) and
+                (self.geti() == other.geti()) and (self.getnode() == other.getnode()) and
+                (self.getargPeri() == other.getargPeri()) and (self.gettimePeri() == other.gettimePeri())):
             return True
         else:
-            return False    
+            return False
 
     def propagateOrbElements(self, newepoch):
         """ Propagate a single object to a new epoch, update the orbital parameters.
         This is not the fastest way to propagate orbits for multiple objects - for that, you should
         use movingObjectList function instead."""
         # TBD - don't have this functionality in pyoorb yet
-        # propagate ... 
+        # propagate ...
         # update orbit
         raise NotImplementedError("Propagate orbital elements not yet implemented in MovingObjects")
 
@@ -216,33 +219,34 @@ class Orbit(DayMOPSObject):
 ###################
 
 class Ephemeris(DayMOPSObject):
-    #dayMOPSObject provides integrated getters and setters if needed
+    # dayMOPSObject provides integrated getters and setters if needed
+
     def __init__(self, mjdTai, ra, dec, magV, distance=None,
                  dradt=None, ddecdt=None, ddistancedt=None,
-                 magFilter=None, magErr=None, magImsim=None, 
+                 magFilter=None, magErr=None, magImsim=None,
                  snr=None, astErr=None, filter=None,
                  solar_elongation=None, cart_x=None, cart_y=None, cart_z=None):
         """ Initialize ephemeris object. 
 
         Only ra/dec/v_mag are completely necessary, but other info appreciated."""
         self.setEphem(mjdTai=mjdTai, ra=ra, dec=dec, magV=magV, distance=distance,
-                      dradt=dradt, ddecdt=ddecdt, ddistancedt=ddistancedt, 
+                      dradt=dradt, ddecdt=ddecdt, ddistancedt=ddistancedt,
                       magFilter=magFilter, magErr=magErr, magImsim=magImsim,
                       snr=snr, astErr=astErr, filter=filter,
-                      solar_elongation=solar_elongation, 
+                      solar_elongation=solar_elongation,
                       cart_x=cart_x, cart_y=cart_y, cart_z=cart_z)
         return
 
     def setEphem(self, mjdTai, ra, dec, magV, distance=None,
                  dradt=None, ddecdt=None, ddistancedt=None,
-                 magFilter=None, magErr=None, magImsim=None, 
+                 magFilter=None, magErr=None, magImsim=None,
                  snr=None, astErr=None, filter=None,
                  solar_elongation=None, cart_x=None, cart_y=None, cart_z=None):
         """Set or update ephemeris object data."""
         self._mjdTai = mjdTai
         # Set the required members of the class - RA/Dec/Vmag.
         self._ra = ra
-        self._dec = dec 
+        self._dec = dec
         # V mag is from the ephemeris calculation, uses H_v and G (comes from pyoorb).
         self._magV = magV
         # These next values may not be set until calculating magnitudes.
@@ -274,7 +278,7 @@ class Ephemeris(DayMOPSObject):
         ddecdt = self.getddecdt()
         magV = self.getmagV()
         return mjdTai, ra, dec, dradt, ddecdt, magV
-            
+
     def isInFieldofView(self, rafov, decfov, radius_fov):
         """ Return boolean, is the object in the field of view or not """
         """ ra/dec/radius should be in degrees """
@@ -283,19 +287,19 @@ class Ephemeris(DayMOPSObject):
         if deltara > 180.:
             deltara = 360-deltara
         deltadec = abs(self._dec - decfov)
-        #print self._ra, self._dec, rafov, decfov, radius_fov, deltara,deltadec
+        # print self._ra, self._dec, rafov, decfov, radius_fov, deltara,deltadec
         # assume Dec/Dec_fov already -90-90, so deltadec should be ok
         if deltadec > radius_fov:
             # can't be in field of view
             return False
         val = n.sin(n.radians(deltadec)/2.0)**2.0 +  \
-        n.cos(n.radians(self._dec))*n.cos(n.radians(decfov))*(n.sin(n.radians(deltara)/2.)**2.0)
+            n.cos(n.radians(self._dec))*n.cos(n.radians(decfov))*(n.sin(n.radians(deltara)/2.)**2.0)
         val = 2.0 * n.arcsin(n.sqrt(val))
         val = n.degrees(val)
         if val < radius_fov:
             return True
         else:
-            return False    
+            return False
 
     def setVariableV_mag(self, var_t0, var_timescale, var_amp):
         """Update V_mag with variability information"""
@@ -305,7 +309,7 @@ class Ephemeris(DayMOPSObject):
     def calcSNR(image_5sigma):
         """ Calculate the signal to noise of the movingObject at ephemeris['mjdTai'] in filter, """
         """  with background image_5sigma"""
-        try: 
+        try:
             self._magFilter
         except AttributeError:
             raise AttributeError, "Need to calculate magnitude in filter bandpass first"

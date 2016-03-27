@@ -1,8 +1,10 @@
-import unittest, os
+import unittest
+import os
 import jobAllocator
 
+
 class JobAllocatorTest(unittest.TestCase):
-    #def testinit(self):
+    # def testinit(self):
     #    if os.path.exists('/local/tmp/'):
     #        workDir = '/local/tmp/jobAllocator/'
     #    elif os.path.exists('/share/sdata1/rgibson/'):
@@ -16,7 +18,7 @@ class JobAllocatorTest(unittest.TestCase):
     #    self.assertNotEqual(j.catalogTypeManager, None)
     #    self.assertNotEqual(j.uIToDBManager, None)
 
-    #def testreset(self):
+    # def testreset(self):
     #    if os.path.exists('/local/tmp/'):
     #        workDir = '/local/tmp/jobAllocator/'
     #    elif os.path.exists('/share/sdata1/rgibson/'):
@@ -42,7 +44,7 @@ class JobAllocatorTest(unittest.TestCase):
     #    self.assert_(j.catalogTypeManager.isCleared)
     #    self.assert_(j.uIToDBManager.isCleared)
 
-    #def testclearMetaData(self):
+    # def testclearMetaData(self):
     #    if os.path.exists('/local/tmp/'):
     #        workDir = '/local/tmp/jobAllocator/'
     #    elif os.path.exists('/share/sdata1/rgibson/'):
@@ -55,7 +57,7 @@ class JobAllocatorTest(unittest.TestCase):
     #    self.assert_(j.metaDataManager)
     #    self.assert_(j.metaDataManager.isCleared == True)
 
-    #def testAddMetaData0(self):
+    # def testAddMetaData0(self):
     #    if os.path.exists('/local/tmp/'):
     #        workDir = '/local/tmp/jobAllocator/'
     #    elif os.path.exists('/share/sdata1/rgibson/'):
@@ -70,8 +72,8 @@ class JobAllocatorTest(unittest.TestCase):
     #    for k in d.keys():
     #        self.assertEqual(d[k], testDict[k])
     #    # Testing beyond this level is up to the MetaData class
-        
-    #def testAddMetaDataN(self):
+
+    # def testAddMetaDataN(self):
     #    if os.path.exists('/local/tmp/'):
     #        workDir = '/local/tmp/jobAllocator/'
     #    elif os.path.exists('/share/sdata1/rgibson/'):
@@ -88,12 +90,12 @@ class JobAllocatorTest(unittest.TestCase):
     #        self.assert_(d.has_key(str(i)))
     #    # Testing beyond this level is up to the MetaData class
 
-    #def teststartStubCatalog(self):
+    # def teststartStubCatalog(self):
     #    j = jobAllocator.JobAllocator(chunkSize=10)
     #    # For some reason, need to use square brackets
     #    j.startCatalogs(['STUB'], 'TEST QUERY', '85748128')
 
-    #def testSmallTrimCatalogMultiType(self):
+    # def testSmallTrimCatalogMultiType(self):
     #    print 'In testSmallTrimCatalog()'
     #    if os.path.exists('/local/tmp/'):
     #        workDir = '/local/tmp/jobAllocator/'
@@ -116,9 +118,10 @@ class JobAllocatorTest(unittest.TestCase):
             raise RuntimeError, '*** No place for workDir.'
         j = jobAllocator.JobAllocator(workDir=workDir, chunkSize=2000, maxCats=3)
         # For some reason, need to use square brackets
-        j.startCatalogs(['TRIM'], ['ALLSTARS', 'GLENS', 'IMAGE', 'EASTEREGGS', 'SSM', 'GALAXY_BULGE', 'GALAXY_DISK', 'AGN'], '85748128')
+        j.startCatalogs(['TRIM'], ['ALLSTARS', 'GLENS', 'IMAGE', 'EASTEREGGS',
+                                   'SSM', 'GALAXY_BULGE', 'GALAXY_DISK', 'AGN'], '85748128')
 
-    #def testFullTrimCatalog(self):
+    # def testFullTrimCatalog(self):
     #    print 'In testFullTrimCatalog()'
     #    if os.path.exists('/local/tmp/'):
     #        workDir = '/local/tmp/jobAllocator/'

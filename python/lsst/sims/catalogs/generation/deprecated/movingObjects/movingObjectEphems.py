@@ -16,10 +16,11 @@ import pyoorb as oo
 import movingObject as mo
 import useful_input as ui
 
+
 def process_objlist(infilename, outfilename):
     """ Given filename of file containing ssmid / time of observation for series of objects, """
     """  generate ephemerides for all of those objects at all of the given times """
-    
+
     # initialize JPL ephemerides for oorb
     ephem_datfile = ""
     oo.pyoorb.oorb_init(ephemeris_fname=ephem_datfile)
@@ -33,20 +34,21 @@ def process_objlist(infilename, outfilename):
         objid, obsdate = line.split()
         objid = int(objid)
         obsdate = float(obsdate)
-        if objid != objidprev: 
+        if objid != objidprev:
             objlist.append(objid)
             objidprev = objid
             obsdatedict[objid] = [obsdate]
         else:
             obsdatedict[objid].append(obsdate)
     filein.close()
-        
+
     # open connection to orbit database
     db, cursor = ui.sqlConnect(dbname='ssm', verbose=False)
-    objects = []    
+    objects = []
     for id in objlist:
         keys = ('q', 'e', 'i', 'node', 'argperi', 't_peri', 'h_v', 'g_value', 'ssmid', 'objtype')
-        query = "select q, e, i, node, argperi, t_peri, h_v, g_value, ssmid, objtype from orbits where ssmid=%d" %(id) 
+        query = "select q, e, i, node, argperi, t_peri, h_v, g_value, ssmid, objtype from orbits where ssmid=%d" % (
+            id)
         results = ui.sqlQuery(cursor, query, verbose=False)
         data = {}
         i = 0
@@ -61,7 +63,7 @@ def process_objlist(infilename, outfilename):
         objects.append(mymo)
 
     # generate ephemerides for each moving object
-    
+
     fileout = open(outfilename, 'w')
     i = 0
     for mobj in objects:
@@ -76,8 +78,8 @@ def process_objlist(infilename, outfilename):
     fileout.close()
 
 
-if __name__ == '__main__' :
+if __name__ == '__main__':
     import sys
-    filein= sys.argv[1]
+    filein = sys.argv[1]
     fileout = sys.argv[2]
     process_objlist(filein, fileout)

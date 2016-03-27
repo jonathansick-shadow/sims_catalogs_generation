@@ -1,9 +1,12 @@
 import os
 import sqlite3
 
-import unittest, numpy, warnings
+import unittest
+import numpy
+import warnings
 import lsst.utils.tests as utilsTests
 from lsst.sims.catalogs.generation.db import DBObject
+
 
 def createDB():
     """
@@ -22,9 +25,9 @@ def createDB():
         raise RuntimeError("Error creating database.")
 
     for ii in range(100):
-        ll=2*ii
-        jj=2*ll
-        kk=3*ll
+        ll = 2*ii
+        jj = 2*ll
+        kk = 3*ll
         cmd = '''INSERT INTO intTable VALUES (%s, %s, %s)''' % (ll, jj, kk)
         c.execute(cmd)
 
@@ -37,7 +40,7 @@ def createDB():
     except:
         raise RuntimeError("Error creating database (double).")
     for ii in range(200):
-        ll=ii+1
+        ll = ii+1
         nn = numpy.sqrt(float(ll))
         mm = numpy.log(float(ll))
 
@@ -51,7 +54,7 @@ def createDB():
     except:
         raise RuntimeError("Error creating database (double).")
     for ii in range(200):
-        ll=ii+1
+        ll = ii+1
         nn = numpy.sqrt(float(ll))
         mm = numpy.log(float(ll))
 
@@ -60,7 +63,6 @@ def createDB():
 
     conn.commit()
     conn.close()
-
 
 
 class DBObjectTestCase(unittest.TestCase):
@@ -75,12 +77,12 @@ class DBObjectTestCase(unittest.TestCase):
             os.unlink('testDBObjectDB.db')
 
     def setUp(self):
-       self.driver = 'sqlite'
-       self.database = 'testDBObjectDB.db'
+        self.driver = 'sqlite'
+        self.database = 'testDBObjectDB.db'
 
     def tearDown(self):
-       self.driver = 'sqlite'
-       self.database = 'testDBObjectDB.db'
+        self.driver = 'sqlite'
+        self.database = 'testDBObjectDB.db'
 
     def testTableNames(self):
         """
@@ -102,12 +104,12 @@ class DBObjectTestCase(unittest.TestCase):
         controlQuery += 'FROM doubleTable, intTable WHERE doubleTable.id = intTable.id'
         controlResults = dbobj.execute_arbitrary(controlQuery)
 
-        #make sure that execute_arbitrary only accepts strings
+        # make sure that execute_arbitrary only accepts strings
         query = ['a', 'list']
         self.assertRaises(RuntimeError, dbobj.execute_arbitrary, query)
 
-        #check that our filter catches different capitalization permutations of the
-        #verboten commands
+        # check that our filter catches different capitalization permutations of the
+        # verboten commands
         query = 'DROP TABLE junkTable'
         self.assertRaises(RuntimeError, dbobj.execute_arbitrary, query)
         self.assertRaises(RuntimeError, dbobj.execute_arbitrary, query.lower())
@@ -179,8 +181,8 @@ class DBObjectTestCase(unittest.TestCase):
         results = dbobj.get_chunk_iterator(query)
 
         dtype = [
-                ('id', int),
-                ('sqrt', float)]
+            ('id', int),
+            ('sqrt', float)]
 
         i = 1
         for chunk in results:
@@ -231,7 +233,7 @@ class DBObjectTestCase(unittest.TestCase):
 
         i = 0
         for chunk in results:
-            if i<90:
+            if i < 90:
                 self.assertEqual(len(chunk), 10)
             for row in chunk:
                 self.assertEqual(2*(i+1), row[0])
@@ -241,7 +243,7 @@ class DBObjectTestCase(unittest.TestCase):
                 self.assertEqual(dtype, row.dtype)
                 i += 1
         self.assertEqual(i, 99)
-        #make sure that we found all the matches whe should have
+        # make sure that we found all the matches whe should have
 
         results = dbobj.execute_arbitrary(query)
         self.assertEqual(dtype, results.dtype)
@@ -253,7 +255,7 @@ class DBObjectTestCase(unittest.TestCase):
             self.assertEqual(3*row[0], row[3])
             i += 1
         self.assertEqual(i, 99)
-        #make sure we found all the matches we should have
+        # make sure we found all the matches we should have
 
     def testMinMax(self):
         """
@@ -267,7 +269,6 @@ class DBObjectTestCase(unittest.TestCase):
 
         dtype = [('MAXthrice', int), ('MINthrice', int)]
         self.assertEqual(results.dtype, dtype)
-
 
     def testPassingConnection(self):
         """
@@ -288,7 +289,7 @@ class DBObjectTestCase(unittest.TestCase):
 
         i = 0
         for chunk in results:
-            if i<90:
+            if i < 90:
                 self.assertEqual(len(chunk), 10)
             for row in chunk:
                 self.assertEqual(2*(i+1), row[0])
@@ -298,7 +299,7 @@ class DBObjectTestCase(unittest.TestCase):
                 self.assertEqual(dtype, row.dtype)
                 i += 1
         self.assertEqual(i, 99)
-        #make sure that we found all the matches whe should have
+        # make sure that we found all the matches whe should have
 
         results = dbobj.execute_arbitrary(query)
         self.assertEqual(dtype, results.dtype)
@@ -310,8 +311,7 @@ class DBObjectTestCase(unittest.TestCase):
             self.assertEqual(3*row[0], row[3])
             i += 1
         self.assertEqual(i, 99)
-        #make sure we found all the matches we should have
-
+        # make sure we found all the matches we should have
 
     def testValidationErrors(self):
         """ Test that appropriate errors and warnings are thrown when connecting
@@ -322,13 +322,13 @@ class DBObjectTestCase(unittest.TestCase):
             DBObject('sqlite:///' + self.database)
             assert len(w) == 1
 
-        #missing database
+        # missing database
         self.assertRaises(AttributeError, DBObject, driver=self.driver)
-        #missing driver
+        # missing driver
         self.assertRaises(AttributeError, DBObject, database=self.database)
-        #missing host
+        # missing host
         self.assertRaises(AttributeError, DBObject, driver='mssql+pymssql')
-        #missing port
+        # missing port
         self.assertRaises(AttributeError, DBObject, driver='mssql+pymssql', host='localhost')
 
 
@@ -338,6 +338,7 @@ def suite():
     suites = []
     suites += unittest.makeSuite(DBObjectTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

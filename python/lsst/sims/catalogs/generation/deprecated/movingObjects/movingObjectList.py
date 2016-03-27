@@ -36,6 +36,7 @@ class MovingObjectList(object):
     Fortran-land, handing OOrb a large array of orbits.
 
     """
+
     def __init__(self, objectList=None):
         if objectList == None:
             self._mObjects = None
@@ -71,17 +72,15 @@ class MovingObjectList(object):
     def getList(self):
         return copy(self._mObjects)
 
-
     def _verifyIsMovingObjectList(self, objectList):
         """ Just a checker to see if you've handed in a proper list of movingObjects"""
         errStr = "movingObjectList constructor and movingObjectList.setList " + \
-        "each take a list of movingObjects as their only argument."
+            "each take a list of movingObjects as their only argument."
         if not isinstance(objectList, list):
             raise TypeException(errStr)
         for e in objectList:
             if not (isinstance(e, mo.MovingObject)):
                 raise TypeException(errStr)
-    
 
     def generateEphemeridesForAllObjects(self, mjdTaiList, obscode=807):
         """ generates ephemerides for all sources in the source list
@@ -105,7 +104,7 @@ class MovingObjectList(object):
             movingobj = self._mObjects[i]
             objid = movingobj.getobjid()
             elements = movingobj.Orbit
-            #set up an array for pyoorb. it takes:
+            # set up an array for pyoorb. it takes:
             # 0: orbitId
             # 1 - 6: orbital elements, using radians for angles
             # 7: element type code, where 2 = cometary - means timescale is TT, too
@@ -114,7 +113,7 @@ class MovingObjectList(object):
             # 10: H
             # 11: G
             orbitsArray[i][:] = [movingobj.getobjid(),
-                                 elements.getq(), 
+                                 elements.getq(),
                                  elements.gete(),
                                  n.radians(elements.geti()),
                                  n.radians(elements.getnode()),
@@ -125,13 +124,13 @@ class MovingObjectList(object):
                                  elements.getorb_timescale(),
                                  movingobj.getmagHv(),
                                  movingobj.getphaseGv()]
-        # we don't need a covariance matrix for ssm objects (=0) 
+        # we don't need a covariance matrix for ssm objects (=0)
         # and the oorb_ephemeris call changes if a covariance exists (to oorb_ephemeris_covariance)
         # set up array to hold ephemeris date information for all moving objects
-        ephem_dates = n.zeros([len(mjdTaiList),2], dtype=n.double, order='F')
+        ephem_dates = n.zeros([len(mjdTaiList), 2], dtype=n.double, order='F')
         for i in range(len(mjdTaiList)):
             ephem_dates[i][:] = [mjdTaiList[i], 4.0]
-        # timescale; 1 = UTC. 2 = UT1.  3= TT. 4 = TAI 
+        # timescale; 1 = UTC. 2 = UT1.  3= TT. 4 = TAI
 
         # now do ephemeris generation for all objects on all dates
         ephem_datfile = ""
@@ -140,45 +139,47 @@ class MovingObjectList(object):
         ephems, err = oo.pyoorb.oorb_ephemeris(in_orbits = orbitsArray,
                                                in_obscode = obscode,
                                                in_date_ephems = ephem_dates)
-        
+
         if (err != 0):
             raise Exception("pyoorb.oorb_ephemeris encountered an error")
-        
+
         # ephems contains a 3-D Fortran array of ephemerides, the ephemerides are:
         # distance, ra, dec, mag, ephem mjd, ephem mjd timescale, dradt(sky), ddecdt(sky)
         # per object, per date, 8 elements (shape is OBJ(s)/DATE(s)/VALUES)
-        # now go back and assign data to individual moving objects (using the string to put back in dictionary)
+        # now go back and assign data to individual moving objects (using the
+        # string to put back in dictionary)
         for i in range(len(self._mObjects)):
             for j in range(len(mjdTaiList)):
                 eph = ephems[i][j]
-                dradt = eph[6]  #/n.cos(n.radians(eph[2]))  -- sky motion (including cos(dec) is coord motion)
-                ddecdt = eph[7]                 
+                # /n.cos(n.radians(eph[2]))  -- sky motion (including cos(dec) is coord motion)
+                dradt = eph[6]
+                ddecdt = eph[7]
                 self._mObjects[i].Ephemerides[mjdTaiListStr[j]] = mo.Ephemeris(mjdTai=mjdTaiList[j],
                                                                                ra=eph[1], dec=eph[2],
                                                                                magV=eph[3],
                                                                                distance=eph[0],
-                                                                               dradt=dradt, 
+                                                                               dradt=dradt,
                                                                                ddecdt=ddecdt)
         # done calculating ephemerides. ephemerides stored in dictionary with movingObjects
         return
 
     def getMovingObjectsInFieldofView(self, ra_fov, dec_fov, radius_fov, mjdTai):
-        """ Return MovingObjectList of objects within field of view """        
+        """ Return MovingObjectList of objects within field of view """
         """  given field of view info in degrees """
         # this method is only applicable to ONE time and one field of view at a time
-        outputList = []        
+        outputList = []
         for movingobj in self._mObjects:
-            # check if an ephemeris exists for this night - calculate if necessary 
+            # check if an ephemeris exists for this night - calculate if necessary
             # avoid this warning if possible - method to calc all ephemerides at once much faster
-            try: 
+            try:
                 movingobj.Ephemerides[movingobj.mjdTaiStr(mjdTai)]
             except AttributeError:
-                warning.warn('moving object does not have ephemeris on this date')            
-                movingobj.calcEphemeris(mjdTai) 
+                warning.warn('moving object does not have ephemeris on this date')
+                movingobj.calcEphemeris(mjdTai)
             # check if moving object was in the field of view of exposure
-            if movingobj.Ephemerides[movingobj.mjdTaiStr(mjdTai)].isInFieldofView(ra_fov, dec_fov, radius_fov): 
+            if movingobj.Ephemerides[movingobj.mjdTaiStr(mjdTai)].isInFieldofView(ra_fov, dec_fov, radius_fov):
                 # then object was in the field of view
-                outputList.append(movingobj)        
+                outputList.append(movingobj)
         return MovingObjectList(outputList)
 
     def calcAllMags(self, filt, mjdTaiList, rootSEDdir, rootFILTERdir=None, withErrors=True, fiveSigmaLimitingMag=None):
@@ -193,7 +194,7 @@ class MovingObjectList(object):
             # (assumes throughputs is setup)
             # Just use the default directory of the throughputs as this is probably correct.
             rootFILTERdir = os.getenv("LSST_THROUGHPUTS_DEFAULT")
-        # Now rootFILTERdir should be defined. 
+        # Now rootFILTERdir should be defined.
         if rootFILTERdir == None:
             raise Exception("Ack: rootFILTERdir is undefined and it seems that 'throughputs' is not setup.")
         # Import Sed and Bandpass for calculating magnitudes. (assumes catalogs_measures is setup)
@@ -204,17 +205,17 @@ class MovingObjectList(object):
         filterlist = ('V', 'imsim', filt)
         for f in filterlist:
             if f == 'V':
-                filename = os.path.join(rootSEDdir,'harris_V.dat')
-                # Instantiate and read the throughput file. 
+                filename = os.path.join(rootSEDdir, 'harris_V.dat')
+                # Instantiate and read the throughput file.
                 bandpass[f] = Bandpass()
                 bandpass[f].readThroughput(filename)
-            elif f=='imsim':
+            elif f == 'imsim':
                 filename = 'imsim'
                 bandpass[f] = Bandpass()
                 bandpass[f].imsimBandpass()
             else:
-                filename = os.path.join(rootFILTERdir,'total_' + f + '.dat')
-                # Instantiate and read the throughput file. 
+                filename = os.path.join(rootFILTERdir, 'total_' + f + '.dat')
+                # Instantiate and read the throughput file.
                 bandpass[f] = Bandpass()
                 bandpass[f].readThroughput(filename)
         # Read in and set up sed files. Assumes asteroid SEDS end in .dat
@@ -223,7 +224,7 @@ class MovingObjectList(object):
         for p in possiblesedtypes:
             if p.endswith('.dat'):
                 sedtypes.append(p)
-        sed={}
+        sed = {}
         sedmag = {}
         sedcol = {}
         for sedfile in sedtypes:
@@ -235,8 +236,8 @@ class MovingObjectList(object):
             sedmag[sedfile] = {}
             sedcol[sedfile] = {}
             for f in filterlist:
-               sedmag[sedfile][f] = sed[sedfile].calcMag(bandpass[f])
-               sedcol[sedfile][f] = sedmag[sedfile][f] - sedmag[sedfile]['V']
+                sedmag[sedfile][f] = sed[sedfile].calcMag(bandpass[f])
+                sedcol[sedfile][f] = sedmag[sedfile][f] - sedmag[sedfile]['V']
         # set up mjdTaiListStr for access to ephemeris dictionaries
         movingobj = self._mObjects[0]
         mjdTaiListStr = []
@@ -253,26 +254,26 @@ class MovingObjectList(object):
                 try:  # check ephemerides exist
                     movingobj.Ephemerides[mjdTaiStr]
                 except AttributeError:
-                    raise Exception("Do not have an ephemeride on date %s" %(mjdTaiStr))
+                    raise Exception("Do not have an ephemeride on date %s" % (mjdTaiStr))
                 vmag = movingobj.Ephemerides[mjdTaiStr].getmagV()
                 sedname = movingobj.getsedname()
                 # Check if sedname in list of known seds.
-                if sed.has_key(sedname)==False:
+                if sed.has_key(sedname) == False:
                     # HACK  - FIX when catalogs updated
                     sedname = 'S.dat'
-                    #raise Exception("SED (%s) of moving object (#%d) not in movingObjectList's directory."
+                    # raise Exception("SED (%s) of moving object (#%d) not in movingObjectList's directory."
                     #                %(sedname, movingobj.getobjid()))
                 # calculate magnitudes
                 filtmag = vmag + sedcol[sedname][filt]
                 imsimmag = vmag + sedcol[sedname]['imsim']
-                # set filter magnitude in ephemeris 
-                movingobj.Ephemerides[mjdTaiStr].setmagFilter(filtmag)  
+                # set filter magnitude in ephemeris
+                movingobj.Ephemerides[mjdTaiStr].setmagFilter(filtmag)
                 movingobj.Ephemerides[mjdTaiStr].setmagImsim(imsimmag)
                 # Add SNR measurement if given 5-sigma limiting mag for exposure.
                 if fiveSigmaLimitingMag != None:
                     flux_ratio = n.power(10, 0.4*(fiveSigmaLimitingMag - filtmag))
                     snr = 5 * (flux_ratio)
-                    movingobj.Ephemerides[mjdTaiStr].setsnr(snr)                    
+                    movingobj.Ephemerides[mjdTaiStr].setsnr(snr)
                 # Calculate approx errors in ra/dec/mag from magnitude/m5.
                 if withErrors:
                     if fiveSigmaLimitingMag == None:
@@ -285,7 +286,7 @@ class MovingObjectList(object):
                     ast_error_sys = 10.0
                     astrom_error = n.sqrt(ast_error_sys**2 + ast_error_rand**2)
                     # convert from mas to deg
-                    astrom_error = astrom_error / 100.0 / 60.0/ 60.0
+                    astrom_error = astrom_error / 100.0 / 60.0 / 60.0
                     movingobj.Ephemerides[mjdTaiStr].setastErr(astrom_error)
                     mag_error_sys = 0.005
                     mag_error = n.sqrt(error_rand**2 + mag_error_sys**2)
@@ -298,18 +299,19 @@ class MovingObjectList(object):
         """ Given five sigma limiting mag for image and SNR cutoff """
         # This method is ONLY applicable to ONE time and ONE five sigma limiting magnitude at once
         outputList = []
-        # Uses SNR generated in calcAllMags when used with error generation. 
+        # Uses SNR generated in calcAllMags when used with error generation.
         # Check that ephemerides exist and magnitudes/snr calculated on this date
         movingobj = self._mObjects[0]
         mjdTaiStr = movingobj.mjdTaiStr(mjdTai)
         try:
             movingobj.Ephemerides[mjdTaiStr]
         except AttributeError:
-            raise Exception("Need to set up ephemerides and magnitudes for this date (%f) first" %(mjdTai))
-        try: 
+            raise Exception("Need to set up ephemerides and magnitudes for this date (%f) first" % (mjdTai))
+        try:
             movingobj.Ephemerides[mjdTaiStr].getsnr()
         except AttributeError:
-            raise Exception("Have an ephemeride for this date (%f), but no SNR yet - calcAllMags first with a 5-sigma limiting magnitude value" %(mjdTai))
+            raise Exception(
+                "Have an ephemeride for this date (%f), but no SNR yet - calcAllMags first with a 5-sigma limiting magnitude value" % (mjdTai))
         for movingobj in self._mObjects:
             if (movingobj.Ephemerides[mjdTaiStr].getsnr() > SNRcutoff):
                 # then object was above the SNR cutoff
@@ -318,7 +320,8 @@ class MovingObjectList(object):
 
     def printList(self, mjdTaiList):
         """ Simple print of all the parameters associated with a particular object """
-        output = ['objid', 'mjdTai', 'ra', 'dec', 'dradt', 'ddecdt', 'distance', 'magImsim', 'magFilter', 'filter']
+        output = ['objid', 'mjdTai', 'ra', 'dec', 'dradt',
+                  'ddecdt', 'distance', 'magImsim', 'magFilter', 'filter']
 
         # set up mjdTaiListStr for access to ephemeris dictionaries
         movingobj = self._mObjects[0]
@@ -332,12 +335,12 @@ class MovingObjectList(object):
         for mjdTaiStr in mjdTaiListStr:
             for movingobj in self._mObjects:
                 ephem = movingobj.Ephemerides[mjdTaiStr]
-                print "%d %f %f %f %f %f %f %f %f %s" %(movingobj.getobjid(), 
-                                                        ephem.getra(), ephem.getdec(),
-                                                        ephem.getdradt(), ephem.getddecdt(),
-                                                        ephem.getdistance(), 
-                                                        ephem.getmagImsim(), ephem.getmagFilter(),
-                                                        ephem.getfilter())
+                print "%d %f %f %f %f %f %f %f %f %s" % (movingobj.getobjid(),
+                                                         ephem.getra(), ephem.getdec(),
+                                                         ephem.getdradt(), ephem.getddecdt(),
+                                                         ephem.getdistance(),
+                                                         ephem.getmagImsim(), ephem.getmagFilter(),
+                                                         ephem.getfilter())
         return
 
 """

@@ -7,18 +7,20 @@ from lsst.sims.catalogs.measures.astrometry.Astrometry import Astrometry
 import os
 import numpy
 
+
 class makeEaster (object):
+
     def __init__(self):
         self.tpath = os.getenv('LSST_THROUGHPUTS_DEFAULT')
         self.spath = os.getenv('SIMS_SED_LIBRARY_DIR')
         self.specmap = self.makeSpecMap("../../data/fileMaps/spec_map.dat")
         self.eggs = []
-        self.fields = ['id','filename', 'fieldid', 'ra', 'dec', 'gizisid', 'appmag', 'filtid',\
-        'parallax', 'mura', 'mudec', 'vrad', 'teff',  'logg', 'feh', 'd',\
-        'filtstr', 'sed','fluxnorm','magnorm','umag','gmag','rmag','imag',\
-        'zmag','ymag','gal_l','gal_b','ebv']
-        self.fieldind = [-1,-1, 0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18,\
-                19, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+        self.fields = ['id', 'filename', 'fieldid', 'ra', 'dec', 'gizisid', 'appmag', 'filtid',
+                       'parallax', 'mura', 'mudec', 'vrad', 'teff', 'logg', 'feh', 'd',
+                       'filtstr', 'sed', 'fluxnorm', 'magnorm', 'umag', 'gmag', 'rmag', 'imag',
+                       'zmag', 'ymag', 'gal_l', 'gal_b', 'ebv']
+        self.fieldind = [-1, -1, 0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18,
+                         19, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
 
     def addEaster(self, filename):
         fh = open(filename)
@@ -33,21 +35,21 @@ class makeEaster (object):
                 else:
                     line[name] = flds[ind]
 
-            magNorm, fluxNorm = self.getSpecNorms(self.specmap[line['sed']],\
-                    float(line['appmag']), line['filtstr'])
-            glon, glat = Astrometry().equatorialToGalactic([float(line['ra'])],\
-                    [float(line['dec'])]) 
+            magNorm, fluxNorm = self.getSpecNorms(self.specmap[line['sed']],
+                                                  float(line['appmag']), line['filtstr'])
+            glon, glat = Astrometry().equatorialToGalactic([float(line['ra'])],
+                                                           [float(line['dec'])])
             line['gal_l'] = glon[0]*180./math.pi
             line['gal_b'] = glat[0]*180./math.pi
             line['umag'], line['gmag'], line['rmag'], line['imag'], line['zmag'], line['ymag'] =\
-                    self.calcLSSTMags(self.specmap[line['sed']], fluxNorm)
+                self.calcLSSTMags(self.specmap[line['sed']], fluxNorm)
             line['magnorm'] = magNorm
             line['fluxnorm'] = fluxNorm
             line['ebv'] = 0.
             try:
                 line['id'] = self.eggs[-1]['id'] + 1
             except:
-                line['id'] = 303 
+                line['id'] = 303
             self.eggs.append(line)
 
     def getSpecNorms(self, sedfile, mag, filtstr):

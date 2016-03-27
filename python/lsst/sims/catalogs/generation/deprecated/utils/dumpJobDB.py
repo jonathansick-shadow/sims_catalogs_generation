@@ -1,10 +1,14 @@
 # execfile('dumpJobDB.py')
 
-import os, sys, time
+import os
+import sys
+import time
 from lsst.sims.catalogs.generation.db import jobDB
 import throttleUtils
 
-owner = sys.argv[1]; iD = int(sys.argv[2])
+owner = sys.argv[1]
+iD = int(sys.argv[2])
+
 
 def dump(owner, iD):
     j = jobDB.JobId(iD, owner=owner)
@@ -21,6 +25,6 @@ def dump(owner, iD):
     f.close()
 
 
-#while True:
+# while True:
 dump(owner, iD)
 

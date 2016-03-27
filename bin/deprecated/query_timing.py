@@ -3,8 +3,10 @@ from datetime import datetime
 import numpy
 import sys
 
+
 def total_hours(td):
     return (td.microseconds+(td.seconds+td.days*4*3600)*10**6)/10**6/3600.
+
 
 def count_running(r, results):
     n = 0
@@ -19,7 +21,7 @@ def count_running(r, results):
     return n
 
 conn = pg.connect(host="z.astro.washington.edu", database="joblog",
-        user="jobreporter", password="jobreporter")
+                  user="jobreporter", password="jobreporter")
 cur = conn.cursor()
 qstr = """
 select stimes.jobid, stimes.start_time, ftimes.stop_time,
@@ -47,7 +49,7 @@ ftimes.stop_time-stimes.start_time runtime from
 cur.execute(qstr)
 results = cur.fetchall()
 res_o = results[0]
-data = {'id':[], 'starttime':[], 'stoptime':[], 'runtime':[]}
+data = {'id': [], 'starttime': [], 'stoptime': [], 'runtime': []}
 done = open("done.dat", "w")
 running = open("running.dat", "w")
 for r in results:

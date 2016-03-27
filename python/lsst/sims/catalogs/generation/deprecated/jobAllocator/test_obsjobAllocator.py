@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 import jobAllocator
 
 print 'testFullTrimCatalog()'
@@ -13,8 +14,10 @@ print 'workDir:', workDir
 if sys.argv[2] = 'queryOnly':
     q0 = True
     print '*** DEBUG:  QueryOnly mode.'
-else: q0 = False
+else:
+    q0 = False
 
 j = jobAllocator.JobAllocator(workDir=workDir, chunkSize=500000, maxCats=-1, queryOnly=qO)
 # For some reason, need to use square brackets
-j.startCatalogs(['TRIM'], ['ALLSTARS', 'GLENS', 'IMAGE', 'EASTEREGGS', 'SSM', 'GALAXY_DISK', 'GALAXY_BULGE', 'AGN'], sys.argv[1])
+j.startCatalogs(['TRIM'], ['ALLSTARS', 'GLENS', 'IMAGE', 'EASTEREGGS',
+                           'SSM', 'GALAXY_DISK', 'GALAXY_BULGE', 'AGN'], sys.argv[1])

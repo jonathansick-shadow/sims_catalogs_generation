@@ -1,7 +1,9 @@
 # execfile('uIBackEnd.py')
-#execfile('r.py') # Reload all modules when this one is reloaded
+# execfile('r.py') # Reload all modules when this one is reloaded
 
-import pg, numpy
+import pg
+import numpy
+
 
 def printSyntax():
     print '\nuIBackEnd.py syntax:'
@@ -24,6 +26,7 @@ def printSyntax():
     print '   SQLString=x:  string for SQL query'
     print '\n\n'
 
+
 def parseCommandLine():
     if len(sys.argv) < 3:
         print '*** Need at least 2 command-line parameters.'
@@ -31,14 +34,22 @@ def parseCommandLine():
         sys.exit(1)
 
     argDict = {}
-    if sys.argv[1].lower() == 'bbox': argDict['inCmd'] = 'bbox'
-    elif sys.argv[1].lower() == 'bbox': argDict['inCmd'] = 'bbox'
-    elif sys.argv[1].lower() == 'bboxmjd': argDict['inCmd'] = 'bboxMJD'
-    elif sys.argv[1].lower() == 'mjd': argDict['inCmd'] = 'mJD'
-    elif sys.argv[1].lower() == 'cone': argDict['inCmd'] = 'cone'
-    elif sys.argv[1].lower() == 'obshistid': argDict['inCmd'] = 'obsHistID'
-    elif sys.argv[1].lower() == 'sql': argDict['inCmd'] = 'sQL'
-    else: raise ValueError, '*** qType not recognized: ' + sys.argv[1]
+    if sys.argv[1].lower() == 'bbox':
+        argDict['inCmd'] = 'bbox'
+    elif sys.argv[1].lower() == 'bbox':
+        argDict['inCmd'] = 'bbox'
+    elif sys.argv[1].lower() == 'bboxmjd':
+        argDict['inCmd'] = 'bboxMJD'
+    elif sys.argv[1].lower() == 'mjd':
+        argDict['inCmd'] = 'mJD'
+    elif sys.argv[1].lower() == 'cone':
+        argDict['inCmd'] = 'cone'
+    elif sys.argv[1].lower() == 'obshistid':
+        argDict['inCmd'] = 'obsHistID'
+    elif sys.argv[1].lower() == 'sql':
+        argDict['inCmd'] = 'sQL'
+    else:
+        raise ValueError, '*** qType not recognized: ' + sys.argv[1]
 
     for i in range(2, len(sys.argv)):
         print 'Parsing optional argument: ' + sys.argv[i]
@@ -86,23 +97,33 @@ def parseCommandLine():
         elif t0 == 'sqlstring':
             t1 = sys.argv[i].split('=')
             t2 = t1[1]
-            for i in range(2,len(t1)): t2 += ('=' + t1[i])
+            for i in range(2, len(t1)):
+                t2 += ('=' + t1[i])
             print '+++ string +++:  %s' % t2
             argDict['sQLString'] = t2
-        else: raise RuntimeError, '*** Unknown param: ' + t0
+        else:
+            raise RuntimeError, '*** Unknown param: ' + t0
     return argDict
+
 
 def verifyArgs(argDict):
     if not argDict.has_key('inCmd'):
         raise ValueError, '*** qType not supplied.'
-    if argDict['inCmd'] == 'bbox': pass
-    elif argDict['inCmd'] == 'bboxMJD': pass
-    elif argDict['inCmd'] == 'mJD': pass
-    elif argDict['inCmd'] == 'cone': pass
-    elif argDict['inCmd'] == 'obsHistID': pass
-    elif argDict['inCmd'] == 'sQL': pass
-    else: raise ValueError, '*** Unknown qType: ' + argDict['inCmd']
-    
+    if argDict['inCmd'] == 'bbox':
+        pass
+    elif argDict['inCmd'] == 'bboxMJD':
+        pass
+    elif argDict['inCmd'] == 'mJD':
+        pass
+    elif argDict['inCmd'] == 'cone':
+        pass
+    elif argDict['inCmd'] == 'obsHistID':
+        pass
+    elif argDict['inCmd'] == 'sQL':
+        pass
+    else:
+        raise ValueError, '*** Unknown qType: ' + argDict['inCmd']
+
     t0 = argDict['inCmd']
     if t0 == 'bbox':
         if not argDict.has_key('minRA'):
@@ -150,6 +171,7 @@ def verifyArgs(argDict):
         raise ValueError, '*** Unknown qType: ' + t0
     print '>>> Argument verification completed. <<<'
 
+
 def constructSQLWhere(argDict):
     # Assume all parameters are present and verification has passed
     toRad = numpy.pi / 180.
@@ -187,6 +209,8 @@ def constructSQLWhere(argDict):
 # Start up OpSim postgres client:
 #  /astro/apps/bin/psql -h deathray -U cosmouser spheretest
 #  password: cosmouser
+
+
 def do(argDict, selStr0):
     print 'Dumping argDict:'
     for k in argDict:
@@ -200,16 +224,16 @@ def do(argDict, selStr0):
     matchStr = 'output_opsim3_61 b where a.obshistid = b.obshistid;'
 
     dBName0 = 'cosmoDB.11.19.2009'
-    res = pg.connect(host='deathray.astro.washington.edu', user='cosmouser', dbname=dBName0, passwd='cosmouser')
-
+    res = pg.connect(host='deathray.astro.washington.edu',
+                     user='cosmouser', dbname=dBName0, passwd='cosmouser')
 
     #b.rotSkyPos, b.rotTelPos, b.sunalt, b.sunaz, b.rawseeing, b.seeing,
     #b.filtsky, b.dist2moon, b.moonalt, b.phaseangle, b.miescatter,
-    #b.moonillum, b.darkbright, b.perry_skybrightness from (select
-    #min(obshistid) obshistid from output_opsim3_61 where fielddec between
+    # b.moonillum, b.darkbright, b.perry_skybrightness from (select
+    # min(obshistid) obshistid from output_opsim3_61 where fielddec between
     #-0.033 and 0.033 and fieldra between 0.161 and 6.122 and expmjd
-    #between 49353. and 49718. group by expdate) a, output_opsim3_61 b
-    #where a.obshistid = b.obshistid;
+    # between 49353. and 49718. group by expdate) a, output_opsim3_61 b
+    # where a.obshistid = b.obshistid;
 
     query = 'SELECT %s FROM %s %s' % (
         selStr0, fromStr, matchStr)
@@ -218,7 +242,7 @@ def do(argDict, selStr0):
     dictRes = results.dictresult()
     print 'Got %i results' % len(dictRes)
     #dictRes['DBQueried'] = dBName
-    #print dictRes
+    # print dictRes
     return dictRes, dBName0
 
 #whereStr = 'WHERE expMJD>=50000 and expMJD<=50001.1'
@@ -236,8 +260,6 @@ def queryOnObsHistID(obsHistIdStr):
     return t0[0]
 
 
-
-
 # python uIBackEnd.py bbox minRA=10.2 minDec=10.4 maxRA=11 maxDec=12
 # python uIBackEnd.py bboxMJD minRA=10.2 minDec=10.4 maxRA=11 maxDec=12 minMJD=50000 maxMJD=50011.1
 # python uIBackEnd.py mJD minMJD=50000 maxMJD=50011.1
@@ -245,72 +267,71 @@ def queryOnObsHistID(obsHistIdStr):
 # python uIBackEnd.py obsHistID obsHistIDNum=10217182
 # python uIBackEnd.py sQL sQLString=blah=bleh
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    argDict = parseCommandLine()
 #    do(argDict)
 
 
-
-#mysql> describe output_opsim1_29;
+# mysql> describe output_opsim1_29;
 #+---------------------+------------------+------+-----+---------+-------+
 #| Field               | Type             | Null | Key | Default | Extra |
 #+---------------------+------------------+------+-----+---------+-------+
-#| obsHistID           | int(10) unsigned | NO   | PRI | 0       |       | 
-#| sessionID           | int(10) unsigned | NO   |     | NULL    |       | 
-#| propID              | int(10) unsigned | NO   |     | NULL    |       | 
-#| fieldID             | int(10) unsigned | NO   | MUL | NULL    |       | 
-#| filter              | varchar(8)       | NO   | MUL | NULL    |       | 
-#| seqnNum             | int(10) unsigned | YES  |     | NULL    |       | 
-#| subseq              | varchar(8)       | NO   |     | NULL    |       | 
-#| pairNum             | int(10) unsigned | YES  |     | NULL    |       | 
-#| expDate             | int(10) unsigned | NO   |     | NULL    |       | 
-#| expMJD              | double           | NO   | MUL | NULL    |       | 
-#| expTime             | float            | NO   |     | NULL    |       | 
-#| slewTime            | float            | NO   |     | NULL    |       | 
-#| slewDist            | float            | NO   |     | NULL    |       | 
-#| rotSkyPos           | float            | NO   |     | NULL    |       | 
-#| rotTelPos           | float            | NO   |     | NULL    |       | 
-#| fldVisits           | int(10) unsigned | NO   |     | NULL    |       | 
-#| fldInt              | int(10) unsigned | NO   |     | NULL    |       | 
-#| fldFltrInt          | int(10) unsigned | NO   |     | NULL    |       | 
-#| propRank            | float            | NO   |     | NULL    |       | 
-#| finRank             | float            | NO   |     | NULL    |       | 
-#| maxSeeing           | float            | NO   |     | NULL    |       | 
-#| rawSeeing           | float            | NO   |     | NULL    |       | 
-#| seeing              | float            | NO   |     | NULL    |       | 
-#| xparency            | float            | NO   |     | NULL    |       | 
-#| cldSeeing           | float            | NO   |     | NULL    |       | 
-#| airmass             | float            | NO   |     | NULL    |       | 
-#| VskyBright          | float            | NO   |     | NULL    |       | 
-#| filtSky             | float            | NO   |     | NULL    |       | 
-#| fieldRA             | float            | NO   | MUL | NULL    |       | 
-#| fieldDec            | float            | NO   | MUL | NULL    |       | 
-#| lst                 | float            | NO   |     | NULL    |       | 
-#| altitude            | float            | NO   |     | NULL    |       | 
-#| azimuth             | float            | NO   |     | NULL    |       | 
-#| dist2Moon           | float            | NO   |     | NULL    |       | 
-#| moonRA              | float            | NO   |     | NULL    |       | 
-#| moonDec             | float            | NO   |     | NULL    |       | 
-#| moonAlt             | float            | NO   |     | NULL    |       | 
-#| moonPhase           | float            | NO   |     | NULL    |       | 
-#| sunAlt              | float            | NO   |     | NULL    |       | 
-#| sunAz               | float            | NO   |     | NULL    |       | 
-#| phaseAngle          | float            | NO   |     | NULL    |       | 
-#| rScatter            | double           | NO   |     | NULL    |       | 
-#| mieScatter          | float            | NO   |     | NULL    |       | 
-#| moonIllum           | float            | NO   |     | NULL    |       | 
-#| moonBright          | float            | NO   |     | NULL    |       | 
-#| darkBright          | float            | NO   |     | NULL    |       | 
-#| 5sigma              | float            | YES  |     | NULL    |       | 
-#| perry_skybrightness | float            | YES  |     | NULL    |       | 
-#| 5sigma_ps           | float            | YES  |     | NULL    |       | 
-#| uwskybright         | float            | YES  |     | NULL    |       | 
-#| x                   | float            | YES  |     | NULL    |       | 
-#| y                   | float            | YES  |     | NULL    |       | 
-#| z                   | float            | YES  |     | NULL    |       | 
-#| 5sigma_uw           | float            | YES  |     | NULL    |       | 
-#| hexdithra           | float            | YES  | MUL | NULL    |       | 
-#| hexdithdec          | float            | YES  |     | NULL    |       | 
-#| vertex              | int(11)          | YES  |     | NULL    |       | 
-#| night               | int(11)          | YES  | MUL | NULL    |       | 
+#| obsHistID           | int(10) unsigned | NO   | PRI | 0       |       |
+#| sessionID           | int(10) unsigned | NO   |     | NULL    |       |
+#| propID              | int(10) unsigned | NO   |     | NULL    |       |
+#| fieldID             | int(10) unsigned | NO   | MUL | NULL    |       |
+#| filter              | varchar(8)       | NO   | MUL | NULL    |       |
+#| seqnNum             | int(10) unsigned | YES  |     | NULL    |       |
+#| subseq              | varchar(8)       | NO   |     | NULL    |       |
+#| pairNum             | int(10) unsigned | YES  |     | NULL    |       |
+#| expDate             | int(10) unsigned | NO   |     | NULL    |       |
+#| expMJD              | double           | NO   | MUL | NULL    |       |
+#| expTime             | float            | NO   |     | NULL    |       |
+#| slewTime            | float            | NO   |     | NULL    |       |
+#| slewDist            | float            | NO   |     | NULL    |       |
+#| rotSkyPos           | float            | NO   |     | NULL    |       |
+#| rotTelPos           | float            | NO   |     | NULL    |       |
+#| fldVisits           | int(10) unsigned | NO   |     | NULL    |       |
+#| fldInt              | int(10) unsigned | NO   |     | NULL    |       |
+#| fldFltrInt          | int(10) unsigned | NO   |     | NULL    |       |
+#| propRank            | float            | NO   |     | NULL    |       |
+#| finRank             | float            | NO   |     | NULL    |       |
+#| maxSeeing           | float            | NO   |     | NULL    |       |
+#| rawSeeing           | float            | NO   |     | NULL    |       |
+#| seeing              | float            | NO   |     | NULL    |       |
+#| xparency            | float            | NO   |     | NULL    |       |
+#| cldSeeing           | float            | NO   |     | NULL    |       |
+#| airmass             | float            | NO   |     | NULL    |       |
+#| VskyBright          | float            | NO   |     | NULL    |       |
+#| filtSky             | float            | NO   |     | NULL    |       |
+#| fieldRA             | float            | NO   | MUL | NULL    |       |
+#| fieldDec            | float            | NO   | MUL | NULL    |       |
+#| lst                 | float            | NO   |     | NULL    |       |
+#| altitude            | float            | NO   |     | NULL    |       |
+#| azimuth             | float            | NO   |     | NULL    |       |
+#| dist2Moon           | float            | NO   |     | NULL    |       |
+#| moonRA              | float            | NO   |     | NULL    |       |
+#| moonDec             | float            | NO   |     | NULL    |       |
+#| moonAlt             | float            | NO   |     | NULL    |       |
+#| moonPhase           | float            | NO   |     | NULL    |       |
+#| sunAlt              | float            | NO   |     | NULL    |       |
+#| sunAz               | float            | NO   |     | NULL    |       |
+#| phaseAngle          | float            | NO   |     | NULL    |       |
+#| rScatter            | double           | NO   |     | NULL    |       |
+#| mieScatter          | float            | NO   |     | NULL    |       |
+#| moonIllum           | float            | NO   |     | NULL    |       |
+#| moonBright          | float            | NO   |     | NULL    |       |
+#| darkBright          | float            | NO   |     | NULL    |       |
+#| 5sigma              | float            | YES  |     | NULL    |       |
+#| perry_skybrightness | float            | YES  |     | NULL    |       |
+#| 5sigma_ps           | float            | YES  |     | NULL    |       |
+#| uwskybright         | float            | YES  |     | NULL    |       |
+#| x                   | float            | YES  |     | NULL    |       |
+#| y                   | float            | YES  |     | NULL    |       |
+#| z                   | float            | YES  |     | NULL    |       |
+#| 5sigma_uw           | float            | YES  |     | NULL    |       |
+#| hexdithra           | float            | YES  | MUL | NULL    |       |
+#| hexdithdec          | float            | YES  |     | NULL    |       |
+#| vertex              | int(11)          | YES  |     | NULL    |       |
+#| night               | int(11)          | YES  | MUL | NULL    |       |
 #+---------------------+------------------+------+-----+---------+-------+
